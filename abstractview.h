@@ -18,7 +18,7 @@ public:
     void scale(qreal sx, qreal sy) {
         QGraphicsView::scale(sx, sy);
         emit scaleChanged(sx, sy);
-    } Q_DECL_OVERRIDE
+    }
 
 signals:
     void scaleChanged(qreal sx, qreal sy);

@@ -6,12 +6,12 @@
 AbstractView::AbstractView(QWidget *parent)
     :QGraphicsView(parent), _zoomOnResize(false)
 {
-    this->setAlignment(Qt::AlignLeft | Qt::AlignTop); // No Qt:AlignCenter
+    this->setAlignment(Qt::AlignLeft | Qt::AlignTop); // Qt:AlignCenter también funciona
 }
 
 void AbstractView::resizeEvent(QResizeEvent *event) // TEST
 {
-    if(_zoomOnResize && this->isActiveWindow()) {
+    if(_zoomOnResize && this->isActiveWindow()) { // isActiveWindow puede ser un problema también
         qreal sx = (qreal)event->size().width() /
                 (qreal)event->oldSize().width();
         qreal sy = (qreal)event->size().height() /

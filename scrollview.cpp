@@ -1,15 +1,20 @@
 #include "scrollview.h"
 #include "rulearea.h"
 
+#include <QMouseEvent>
+#include <QWheelEvent>
+
 ScrollView::ScrollView(QWidget *parent)
     : AbstractView(parent)
 {
-    _sizeHint = QSize(25, 25);
-    this->setMinimumSize(_sizeHint);
+    this->setContentsMargins(0, 0, 0, 0);
     this->setOrientation(Qt::Horizontal);
 
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    // como no puede crecer se mantiene pero shake it (parece una cubetera)
+    this->setDragMode(QGraphicsView::ScrollHandDrag);
 
     _scene = new QGraphicsScene(this); // ownership
     this->setScene(_scene);
@@ -43,4 +48,39 @@ void ScrollView::setRuleArea(RuleArea *ruleArea)
     // check nil, remove from scene, destroy? make private?
     _ruleArea = ruleArea;
     _scene->addItem(_ruleArea);
+}
+
+void ScrollView::updateScale(qreal sx, qreal sy)
+{
+    if(_orientation == Qt::Horizontal) {
+        QGraphicsView::scale(sx, 1);
+    } else {
+        QGraphicsView::scale(1, sy);
+    }
+}
+
+void ScrollView::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    QGraphicsView::mouseDoubleClickEvent(event);
+}
+
+void ScrollView::mousePressEvent(QMouseEvent *event)
+{
+    QGraphicsView::mousePressEvent(event);
+}
+
+void ScrollView::mouseMoveEvent(QMouseEvent *event)
+{
+    QGraphicsView::mouseMoveEvent(event);
+}
+
+void ScrollView::mouseReleaseEvent(QMouseEvent *event)
+{
+    QGraphicsView::mouseReleaseEvent(event);
+}
+
+void ScrollView::wheelEvent(QWheelEvent *event)
+{
+    //QGraphicsView::wheelEvent(event); // implementa wheel scroll
+    event->ignore();
 }

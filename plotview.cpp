@@ -2,10 +2,12 @@
 #include "workarea.h"
 
 #include <QMouseEvent>
+#include <QWheelEvent>
 
 PlotView::PlotView(QWidget *parent)
     :AbstractView(parent)
 {
+    this->setContentsMargins(0, 0, 0, 0);
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
@@ -52,4 +54,10 @@ void PlotView::mouseMoveEvent(QMouseEvent *event)
 void PlotView::mouseReleaseEvent(QMouseEvent *event)
 {
     QGraphicsView::mouseReleaseEvent(event);
+}
+
+void PlotView::wheelEvent(QWheelEvent *event)
+{
+    //QGraphicsView::wheelEvent(event); // implementa wheel scroll
+    event->ignore();
 }

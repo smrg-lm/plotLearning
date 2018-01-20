@@ -16,6 +16,12 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0); Q_DECL_OVERRIDE
 
+protected:
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent*) {} Q_DECL_OVERRIDE
+    void mousePressEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
+
 private:
     QRectF _boundingRect;
 };

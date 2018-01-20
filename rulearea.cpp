@@ -1,12 +1,11 @@
 #include "rulearea.h"
 
 #include <QPainter>
+#include <QGraphicsSceneMouseEvent>
 
 RuleArea::RuleArea(QGraphicsItem *parent)
     : QGraphicsObject(parent)
-{
-    //this->setRect(QRectF(0, 0, 500, 25));
-}
+{}
 
 QRectF RuleArea::rect() const
 {
@@ -54,4 +53,22 @@ void RuleArea::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
         painter->drawLine(x, i, width + x, i);
     }
     // end TEST
+}
+
+void RuleArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    // para view drag
+    event->ignore();
+}
+
+void RuleArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    // para view drag
+    event->ignore();
+}
+
+void RuleArea::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    // para view drag
+    event->ignore();
 }
