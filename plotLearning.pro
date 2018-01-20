@@ -14,14 +14,16 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
     workarea.cpp \
-    scrollarea.cpp \
     plotwidget.cpp \
     plotview.cpp \
-    scrollview.cpp
+    scrollview.cpp \
+    abstractview.cpp \
+    rulearea.cpp
 
 HEADERS  += \
     workarea.h \
-    scrollarea.h \
     plotwidget.h \
     plotview.h \
-    scrollview.h
+    scrollview.h \
+    abstractview.h \
+    rulearea.h

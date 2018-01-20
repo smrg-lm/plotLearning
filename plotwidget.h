@@ -5,7 +5,7 @@
 
 class QGridLayout;
 class PlotView;
-class ScrollArea;
+class ScrollView;
 
 class PlotWidget : public QWidget
 {
@@ -17,8 +17,8 @@ public:
 private:
     QGridLayout *_layout;
     PlotView *_plot;
-    ScrollArea *_horizontalScrollArea; int _ix;
-    ScrollArea *_verticalScrollArea; int _iy;
+    ScrollView *_horizontalScrollView;
+    ScrollView *_verticalScrollView;
 };
 
 #endif // PLOTWIDGET_H

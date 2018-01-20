@@ -5,6 +5,8 @@
 
 class WorkArea : public QGraphicsObject
 {
+    Q_OBJECT
+
 public:
     WorkArea(QGraphicsItem *parent = 0);
 

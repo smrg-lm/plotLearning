@@ -1,3 +1,7 @@
+/*
+ *  DELETEME
+ */
+
 #include "scrollarea.h"
 
 #include <QPainter>

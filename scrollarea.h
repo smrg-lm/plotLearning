@@ -1,3 +1,7 @@
+/*
+ *  DELETEME
+ */
+
 #ifndef SCROLLAREA_H
 #define SCROLLAREA_H
 
@@ -24,7 +28,7 @@ public:
     void setRange(int value) { _range = value; }
 
 public slots:
-    // acompaña a PlotView::sceneRect TEST
+    // acompaña a PlotView::sceneRect TEST (updateScale)
     void scale(qreal sx, qreal sy) { _scaleX *= sx; _scaleY *= sy; } // problema int representation
 
 public:
