@@ -20,7 +20,7 @@ SOURCES += main.cpp\
     abstractview.cpp \
     rulearea.cpp \
     visualgroup.cpp \
-    visualobject.cpp
+    visualelement.cpp
 
 HEADERS  += \
     workarea.h \
@@ -30,4 +30,4 @@ HEADERS  += \
     abstractview.h \
     rulearea.h \
     visualgroup.h \
-    visualobject.h
+    visualelement.h

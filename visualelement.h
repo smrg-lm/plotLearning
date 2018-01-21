@@ -1,20 +1,21 @@
-#ifndef VISUALOBJECT_H
-#define VISUALOBJECT_H
+#ifndef VISUALELEMENT_H
+#define VISUALELEMENT_H
 
 #include <QGraphicsItem>
 
 class QGraphicsSceneMouseEvent;
 class QGraphicsSceneWheelEvent;
 
-class VisualObject : public QGraphicsItem
+class VisualElement : public QGraphicsItem
 {
 public:
-    VisualObject(QGraphicsItem *parent);
-    VisualObject(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size); // es const&?
+    VisualElement(QGraphicsItem *parent);
+    VisualElement(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size);
 
-    QRectF rect() const; // size, ver si va en coordenadas parent...
-    void setRect(const QRectF &rect); // cambiar por setSize (no usar más rect)
+    QSizeF size() const;
+    void setSize(const QSizeF &rect);
     QRectF boundingRect() const; Q_DECL_OVERRIDE
+
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0); Q_DECL_OVERRIDE
 
@@ -31,4 +32,4 @@ private:
     QRectF _boundingRect;
 };
 
-#endif // VISUALOBJECT_H
+#endif // VISUALELEMENT_H

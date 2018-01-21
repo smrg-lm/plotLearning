@@ -4,26 +4,8 @@
 #include <QGraphicsSceneMouseEvent>
 
 RuleArea::RuleArea(QGraphicsItem *parent)
-    : QGraphicsObject(parent)
+    : VisualGroup(parent)
 {}
-
-QRectF RuleArea::rect() const
-{
-    return _boundingRect;
-}
-
-void RuleArea::setRect(const QRectF &rect)
-{
-    if(rect != _boundingRect) {
-        this->prepareGeometryChange();
-        _boundingRect = rect;
-    }
-}
-
-QRectF RuleArea::boundingRect() const
-{
-    return _boundingRect;
-}
 
 void RuleArea::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                      QWidget *widget)
@@ -35,13 +17,13 @@ void RuleArea::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     p.setWidth(0);
     painter->setPen(p);
 
-    painter->drawRect(_boundingRect);
+    painter->drawRect(QRectF(QPointF(), this->size()));
 
     // de WorkArea TEST
-    qreal x = _boundingRect.x();
-    qreal y = _boundingRect.y();
-    qreal height = _boundingRect.height();
-    qreal width = _boundingRect.width();
+    qreal x = 0;
+    qreal y = 0;
+    qreal width = this->size().width();
+    qreal height = this->size().height();
 
     for(int i = x; i < width + x; i += 25) {
         painter->drawLine(i, y, i, height + y);

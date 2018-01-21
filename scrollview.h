@@ -12,8 +12,6 @@ class ScrollView : public AbstractView
 public:
     ScrollView(QWidget *parent = 0);
 
-    //QSize minimumSizeHint();
-
     Qt::Orientation orientation() const { return _orientation; }
     void setOrientation(Qt::Orientation o);
 

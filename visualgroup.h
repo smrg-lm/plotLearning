@@ -12,11 +12,12 @@ class VisualGroup : public QGraphicsObject // debería tener raíz común con Vi
 
 public:
     VisualGroup(QGraphicsItem *parent);
-    VisualGroup(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size); // es const&?
+    VisualGroup(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size);
 
-    QRectF rect() const;
-    void setRect(const QRectF &rect);
+    QSizeF size() const;
+    void setSize(const QSizeF &size);
     QRectF boundingRect() const; Q_DECL_OVERRIDE
+
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0); Q_DECL_OVERRIDE
 

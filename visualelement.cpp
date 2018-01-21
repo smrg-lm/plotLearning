@@ -1,4 +1,4 @@
-#include "visualobject.h"
+#include "visualelement.h"
 #include "visualgroup.h"
 
 #include <QPainter>
@@ -7,38 +7,38 @@
 
 #include <QDebug>
 
-VisualObject::VisualObject(QGraphicsItem *parent)
+VisualElement::VisualElement(QGraphicsItem *parent)
     : QGraphicsItem(parent)
 {
     this->setFlag(QGraphicsItem::ItemIsMovable, true); // TEST
 }
 
-VisualObject::VisualObject(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size)
+VisualElement::VisualElement(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size)
     : QGraphicsItem(parent), _boundingRect(QRectF(QPointF(0, 0), size))
 {
     this->setPos(pos);
     this->setFlag(QGraphicsItem::ItemIsMovable, true); // TEST
 }
 
-QRectF VisualObject::rect() const
+QSizeF VisualElement::size() const
 {
-    return _boundingRect;
+    return _boundingRect.size();
 }
 
-void VisualObject::setRect(const QRectF &rect)
+void VisualElement::setSize(const QSizeF &size)
 {
-    if(rect != _boundingRect) {
+    if(size != _boundingRect.size()) {
         this->prepareGeometryChange();
-        _boundingRect = rect;
+        _boundingRect.setSize(size);
     }
 }
 
-QRectF VisualObject::boundingRect() const
+QRectF VisualElement::boundingRect() const
 {
     return _boundingRect;
 }
 
-void VisualObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+void VisualElement::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                      QWidget *widget)
 {
     Q_UNUSED(option);
@@ -52,7 +52,7 @@ void VisualObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     painter->drawRect(_boundingRect);
 }
 
-void VisualObject::clipPosToParent()
+void VisualElement::clipPosToParent()
 {
     VisualGroup *parent = static_cast<VisualGroup*>(this->parentItem());
     if(parent == 0) return;
@@ -72,28 +72,28 @@ void VisualObject::clipPosToParent()
     this->setPos(newPos);
 }
 
-void VisualObject::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+void VisualElement::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsItem::mouseDoubleClickEvent(event);
 }
 
-void VisualObject::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void VisualElement::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsItem::mousePressEvent(event);
 }
 
-void VisualObject::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void VisualElement::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsItem::mouseMoveEvent(event);
      this->clipPosToParent();
 }
 
-void VisualObject::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void VisualElement::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsItem::mouseReleaseEvent(event);
 }
 
-void VisualObject::wheelEvent(QGraphicsSceneWheelEvent *event)
+void VisualElement::wheelEvent(QGraphicsSceneWheelEvent *event)
 {
     QGraphicsItem::wheelEvent(event);
 }

@@ -19,16 +19,16 @@ VisualGroup::VisualGroup(QGraphicsItem *parent, const QPointF &pos, const QSizeF
     this->setFlag(QGraphicsItem::ItemIsMovable, true); // TEST
 }
 
-QRectF VisualGroup::rect() const
+QSizeF VisualGroup::size() const
 {
-    return _boundingRect;
+    return _boundingRect.size();
 }
 
-void VisualGroup::setRect(const QRectF &rect)
+void VisualGroup::setSize(const QSizeF &size)
 {
-    if(rect != _boundingRect) {
+    if(size != _boundingRect.size()) {
         this->prepareGeometryChange();
-        _boundingRect = rect;
+        _boundingRect.setSize(size);
     }
 }
 

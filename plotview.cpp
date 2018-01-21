@@ -29,7 +29,7 @@ void PlotView::setWorkArea(WorkArea *workArea)
 
 QRectF PlotView::waRect() const
 {
-    return _workArea->rect();
+    return QRectF(QPointF(), _workArea->size());
 }
 
 void PlotView::mouseDoubleClickEvent(QMouseEvent *event)
