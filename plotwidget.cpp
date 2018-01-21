@@ -21,11 +21,9 @@ PlotWidget::PlotWidget(QWidget *parent)
     _plot = new PlotView(this);
     _layout->addWidget(_plot, 1, 0);
 
-    //_plot->scene()->addItem(new QGraphicsRectItem()); // TEST
-
     // sync horizontal scroll
     _horizontalScrollView = new ScrollView();
-    _horizontalScrollView->ruleArea()->setRect(QRectF(0, 0, 500, 25));
+    _horizontalScrollView->ruleArea()->setRect(QRectF(0, 0, 500, 25)); // depende de wa
     _layout->addWidget(_horizontalScrollView, 0, 0);
 
     connect(_horizontalScrollView->horizontalScrollBar(), SIGNAL(valueChanged(int)),
@@ -36,7 +34,7 @@ PlotWidget::PlotWidget(QWidget *parent)
     // sync vertical scroll
     _verticalScrollView = new ScrollView();
     _verticalScrollView->setOrientation(Qt::Vertical);
-    _verticalScrollView->ruleArea()->setRect(QRectF(0, 0, 25, 500));
+    _verticalScrollView->ruleArea()->setRect(QRectF(0, 0, 25, 500)); // depende de wa
     _layout->addWidget(_verticalScrollView, 1, 1);
 
     connect(_verticalScrollView->verticalScrollBar(), SIGNAL(valueChanged(int)),
@@ -51,7 +49,7 @@ PlotWidget::PlotWidget(QWidget *parent)
     connect(_plot, SIGNAL(scaleChanged(qreal,qreal)),
             _verticalScrollView, SLOT(updateScale(qreal,qreal)));
 
-    qDebug() << "sizeHint: " << _plot->sizeHint(); // 502px
-    qDebug() << "sizeHint: " << _horizontalScrollView->sizeHint(); // 503px, tiene 1px más y la escrollbar también
-    qDebug() << "sizeHint: " << _verticalScrollView->sizeHint(); // en resize cambia el ancho y se produce el efecto cubetera, es el layout
+    qDebug() << "sizeHint: " << _plot->sizeHint();
+    qDebug() << "sizeHint: " << _horizontalScrollView->sizeHint();
+    qDebug() << "sizeHint: " << _verticalScrollView->sizeHint();
 }

@@ -3,7 +3,7 @@
 
 #include <QGraphicsObject>
 
-class WorkArea : public QGraphicsObject
+class WorkArea : public QGraphicsObject // cambiar a public VisualGroup
 {
     Q_OBJECT
 

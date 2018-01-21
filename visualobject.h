@@ -12,8 +12,8 @@ public:
     VisualObject(QGraphicsItem *parent);
     VisualObject(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size); // es const&?
 
-    QRectF rect() const;
-    void setRect(const QRectF &rect);
+    QRectF rect() const; // size, ver si va en coordenadas parent...
+    void setRect(const QRectF &rect); // cambiar por setSize (no usar más rect)
     QRectF boundingRect() const; Q_DECL_OVERRIDE
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0); Q_DECL_OVERRIDE

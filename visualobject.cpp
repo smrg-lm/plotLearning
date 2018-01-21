@@ -55,16 +55,21 @@ void VisualObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 void VisualObject::clipPosToParent()
 {
     VisualGroup *parent = static_cast<VisualGroup*>(this->parentItem());
+    if(parent == 0) return;
+
     QPointF pos = this->pos();
     QPointF newPos;
 
-    qDebug() << "this pos: " << pos;
-    qDebug() << "this boundingRect: " << _boundingRect;
-    qDebug() << "parent: " << parent;
-    qDebug() << "parent boundingRect: " << parent->boundingRect();
-    qDebug() << "mapToParent: " << this->mapToParent(pos); // ???
+    if(!(pos.x() < 0))
+        newPos.setX(pos.x());
+    if(!(pos.y() < 0))
+        newPos.setY(pos.y());
+    if(pos.x() + _boundingRect.width() > parent->boundingRect().width())
+        newPos.setX(parent->boundingRect().width() - _boundingRect.width());
+    if(pos.y() + _boundingRect.height() > parent->boundingRect().height())
+        newPos.setY(parent->boundingRect().height() - _boundingRect.height());
 
-    //this->setPos(newPos);
+    this->setPos(newPos);
 }
 
 void VisualObject::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
