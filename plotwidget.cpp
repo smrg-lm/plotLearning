@@ -21,6 +21,8 @@ PlotWidget::PlotWidget(QWidget *parent)
     _plot = new PlotView(this);
     _layout->addWidget(_plot, 1, 0);
 
+    //_plot->scene()->addItem(new QGraphicsRectItem()); // TEST
+
     // sync horizontal scroll
     _horizontalScrollView = new ScrollView();
     _horizontalScrollView->ruleArea()->setRect(QRectF(0, 0, 500, 25));

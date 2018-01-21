@@ -18,7 +18,9 @@ SOURCES += main.cpp\
     plotview.cpp \
     scrollview.cpp \
     abstractview.cpp \
-    rulearea.cpp
+    rulearea.cpp \
+    visualgroup.cpp \
+    visualobject.cpp
 
 HEADERS  += \
     workarea.h \
@@ -26,4 +28,6 @@ HEADERS  += \
     plotview.h \
     scrollview.h \
     abstractview.h \
-    rulearea.h
+    rulearea.h \
+    visualgroup.h \
+    visualobject.h

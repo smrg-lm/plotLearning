@@ -2,10 +2,25 @@
 
 #include <QPainter>
 
+// TEST
+#include "visualgroup.h"
+#include "visualobject.h"
+#include <QDebug>
+
 WorkArea::WorkArea(QGraphicsItem *parent)
     : QGraphicsObject(parent)
 {
-    this->setRect(QRectF(0, 0, 500, 500));
+    this->setRect(QRectF(0, 0, 500, 500)); // TEST
+    // begin TEST
+    VisualGroup *vg = new VisualGroup(this, QRectF(0, 0, 200, 100));
+    new VisualObject(vg, QRectF(0, 0, 25, 25));
+    new VisualObject(vg, QRectF(25, 25, 25, 25));
+    new VisualObject(vg, QRectF(50, 50, 25, 25));
+    new VisualObject(vg, QRectF(75, 75, 25, 25));
+    qDebug() << "children: " << this->childItems();
+    qDebug() << "children: " << vg->childItems();
+    qDebug() << "vg visible: " << vg->isVisible();
+    // end TEST
 }
 
 QRectF WorkArea::rect() const
