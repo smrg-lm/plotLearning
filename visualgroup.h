@@ -9,7 +9,7 @@ class VisualGroup : public QGraphicsObject
 
 public:
     VisualGroup(QGraphicsItem *parent);
-    VisualGroup(QGraphicsItem *parent, const QRectF &rect); // es const&?
+    VisualGroup(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size); // es const&?
 
     QRectF rect() const;
     void setRect(const QRectF &rect);

@@ -6,10 +6,10 @@ VisualGroup::VisualGroup(QGraphicsItem *parent)
     : QGraphicsObject(parent)
 {}
 
-VisualGroup::VisualGroup(QGraphicsItem *parent, const QRectF &rect)
-    : QGraphicsObject(parent)
+VisualGroup::VisualGroup(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size)
+    : QGraphicsObject(parent), _boundingRect(QRectF(QPointF(0, 0), size))
 {
-    this->setRect(rect);
+    this->setPos(pos);
 }
 
 QRectF VisualGroup::rect() const
@@ -27,9 +27,7 @@ void VisualGroup::setRect(const QRectF &rect)
 
 QRectF VisualGroup::boundingRect() const
 {
-    qreal penWidth = 1; // esto debería ser variable
-    return QRectF(_boundingRect.x() - penWidth / 2, _boundingRect.y() - penWidth / 2,
-                  _boundingRect.width() + penWidth, _boundingRect.height() + penWidth);
+    return _boundingRect;
 }
 
 void VisualGroup::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,

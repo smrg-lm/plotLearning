@@ -13,10 +13,10 @@ VisualObject::VisualObject(QGraphicsItem *parent)
     this->setFlag(QGraphicsItem::ItemIsMovable, true); // TEST
 }
 
-VisualObject::VisualObject(QGraphicsItem *parent, const QRectF &rect)
-    : QGraphicsItem(parent)
+VisualObject::VisualObject(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size)
+    : QGraphicsItem(parent), _boundingRect(QRectF(QPointF(0, 0), size))
 {
-    this->setRect(rect);
+    this->setPos(pos);
     this->setFlag(QGraphicsItem::ItemIsMovable, true); // TEST
 }
 
@@ -35,9 +35,7 @@ void VisualObject::setRect(const QRectF &rect)
 
 QRectF VisualObject::boundingRect() const
 {
-    qreal penWidth = 1; // esto debería ser variable
-    return QRectF(_boundingRect.x() - penWidth / 2, _boundingRect.y() - penWidth / 2,
-                  _boundingRect.width() + penWidth, _boundingRect.height() + penWidth);
+    return _boundingRect;
 }
 
 void VisualObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
@@ -60,8 +58,10 @@ void VisualObject::clipPosToParent()
     QPointF pos = this->pos();
     QPointF newPos;
 
-    qDebug() << "pos: " << pos; // ???
+    qDebug() << "this pos: " << pos;
+    qDebug() << "this boundingRect: " << _boundingRect;
     qDebug() << "parent: " << parent;
+    qDebug() << "parent boundingRect: " << parent->boundingRect();
     qDebug() << "mapToParent: " << this->mapToParent(pos); // ???
 
     //this->setPos(newPos);

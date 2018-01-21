@@ -22,9 +22,7 @@ void RuleArea::setRect(const QRectF &rect)
 
 QRectF RuleArea::boundingRect() const
 {
-    qreal penWidth = 1; // esto debería ser variable
-    return QRectF(_boundingRect.x() - penWidth / 2, _boundingRect.y() - penWidth / 2,
-                  _boundingRect.width() + penWidth, _boundingRect.height() + penWidth);
+    return _boundingRect;
 }
 
 void RuleArea::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,

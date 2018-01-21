@@ -12,11 +12,11 @@ WorkArea::WorkArea(QGraphicsItem *parent)
 {
     this->setRect(QRectF(0, 0, 500, 500)); // TEST
     // begin TEST
-    VisualGroup *vg = new VisualGroup(this, QRectF(0, 0, 200, 100));
-    new VisualObject(vg, QRectF(0, 0, 25, 25));
-    new VisualObject(vg, QRectF(25, 25, 25, 25));
-    new VisualObject(vg, QRectF(50, 50, 25, 25));
-    new VisualObject(vg, QRectF(75, 75, 25, 25));
+    VisualGroup *vg = new VisualGroup(this, QPointF(0, 0), QSizeF(200, 100));
+    new VisualObject(vg, QPointF(0, 0), QSizeF(25, 25));
+    new VisualObject(vg, QPointF(25, 25), QSizeF(25, 25));
+    new VisualObject(vg, QPointF(50, 50), QSizeF(25, 25));
+    new VisualObject(vg, QPointF(75, 75), QSizeF(25, 25));
     qDebug() << "children: " << this->childItems();
     qDebug() << "children: " << vg->childItems();
     qDebug() << "vg visible: " << vg->isVisible();
@@ -38,9 +38,7 @@ void WorkArea::setRect(const QRectF &rect)
 
 QRectF WorkArea::boundingRect() const
 {
-    qreal penWidth = 1; // esto debería ser variable
-    return QRectF(_boundingRect.x() - penWidth / 2, _boundingRect.y() - penWidth / 2,
-                  _boundingRect.width() + penWidth, _boundingRect.height() + penWidth);
+    return _boundingRect;
 }
 
 void WorkArea::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,

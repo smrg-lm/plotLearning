@@ -10,7 +10,7 @@ class VisualObject : public QGraphicsItem
 {
 public:
     VisualObject(QGraphicsItem *parent);
-    VisualObject(QGraphicsItem *parent, const QRectF &rect); // es const&?
+    VisualObject(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size); // es const&?
 
     QRectF rect() const;
     void setRect(const QRectF &rect);
