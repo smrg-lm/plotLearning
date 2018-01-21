@@ -7,11 +7,7 @@
 ScrollView::ScrollView(QWidget *parent)
     : AbstractView(parent)
 {
-    this->setContentsMargins(0, 0, 0, 0);
     this->setOrientation(Qt::Horizontal);
-
-    this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     // como no puede crecer se mantiene pero shake it (parece una cubetera)
     this->setDragMode(QGraphicsView::ScrollHandDrag);

@@ -7,9 +7,9 @@
 PlotView::PlotView(QWidget *parent)
     :AbstractView(parent)
 {
-    this->setContentsMargins(0, 0, 0, 0);
-    this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    //this->setContentsMargins(0, 0, 0, 0);
+    //this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    //this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     _scene = new QGraphicsScene(this); // ownership
     this->setScene(_scene);

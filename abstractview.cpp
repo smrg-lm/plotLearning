@@ -6,7 +6,10 @@
 AbstractView::AbstractView(QWidget *parent)
     :QGraphicsView(parent), _zoomOnResize(false)
 {
+    this->setContentsMargins(0, 0, 0, 0);
     this->setAlignment(Qt::AlignLeft | Qt::AlignTop); // Qt:AlignCenter también funciona
+    this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
 void AbstractView::resizeEvent(QResizeEvent *event) // TEST
