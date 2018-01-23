@@ -37,18 +37,15 @@ void RuleArea::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
 void RuleArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    // para view drag
     event->ignore();
 }
 
 void RuleArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    // para view drag
     event->ignore();
 }
 
 void RuleArea::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    // para view drag
     event->ignore();
 }

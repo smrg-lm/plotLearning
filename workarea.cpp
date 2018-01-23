@@ -12,12 +12,14 @@ WorkArea::WorkArea(QGraphicsItem *parent)
     : VisualGroup(parent)
 {
     this->setSize(QSizeF(500, 500)); // TEST
+    this->setFlag(QGraphicsItem::ItemIsMovable, false); // no se puede mover o hay que sincronizar con sceneRect
 
     VisualGroup *vg = new VisualGroup(this, QPointF(0, 0), QSizeF(200, 100));
     new VisualElement(vg, QPointF(0, 0), QSizeF(25, 25));
     new VisualElement(vg, QPointF(25, 25), QSizeF(25, 25));
     new VisualElement(vg, QPointF(50, 50), QSizeF(25, 25));
     new VisualElement(vg, QPointF(75, 75), QSizeF(25, 25));
+
     qDebug() << "children: " << this->childItems();
     qDebug() << "children: " << vg->childItems();
     qDebug() << "vg visible: " << vg->isVisible();

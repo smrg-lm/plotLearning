@@ -23,6 +23,10 @@ public:
     // QGraphicsView transformationAnchor : ViewportAnchor
     // QGraphicsView::isInteractive()
 
+    // para que los eventos lleguen a la escena hay que despacharlos a QGraphicsView
+    // en caso de querer al implmentar estos responders
+    void wheelEvent(QWheelEvent *event) override;
+
 signals:
     void scaleChanged(qreal sx, qreal sy);
 

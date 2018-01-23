@@ -29,14 +29,19 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     Q_UNUSED(painter);
 
     // por ahora, el largo del widget vw es igual a la cantidad de muestras
-    QRectF vr = this->visibleRect(); // *** el rectángulo se actualiza mal?
+    QRectF vr = this->visibleRect(); // *** el rectángulo se actualiza mal? no parece
 
     // si no es visible *return* (¿antes o después de drawRect? ¿qué hace QGraphicsView?)
     // si no cambió la visibilidad *return*
 
     // *** se actualiza mal por redondeo? no parece
     int startPos = (int)round(vr.left());
-    int endPos = startPos + (int)round(vr.width());
+
+    // *** TEST por artefactos: se soluciona, pero buscar la causa
+    // *** Igual falla jugando con el zoom
+    int rightOffScreen = (fakeData.length() - (startPos + (int)round(vr.width())));
+    if(rightOffScreen >= 10) rightOffScreen = 10;
+    int endPos = startPos + (int)round(vr.width()) + rightOffScreen;
 
     qDebug() << "list size: " << fakeData.size();
     qDebug() << "start: " << startPos;
@@ -67,6 +72,6 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
         qDebug() << "y1: " << y1;
         //qDebug() << "x2: " << x2;
         qDebug() << "y2: " << y2;
-        painter->drawLine(x1, y1, x2, y2); // *** hay artefactos al hacer srcoll de gv con scrollview
+        painter->drawLine(x1, y1, x2, y2); // *** hay artefactos al hacer srcoll de gv con scrollview lento (puede ser que no actualiza?)
     }
 }

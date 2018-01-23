@@ -14,6 +14,7 @@ public:
                QWidget *widget = 0) override;
 
 protected:
+    // hack para view drag, si no se reimplementan la mano mueve libre, ver cómo es
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;

@@ -4,6 +4,8 @@
 #include <QMouseEvent>
 #include <QWheelEvent>
 
+#include <QDebug>
+
 PlotView::PlotView(QWidget *parent)
     :AbstractView(parent)
 {
@@ -34,26 +36,27 @@ QRectF PlotView::waRect() const
 
 void PlotView::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    QGraphicsView::mouseDoubleClickEvent(event);
+    AbstractView::mouseDoubleClickEvent(event);
 }
 
 void PlotView::mousePressEvent(QMouseEvent *event)
 {
-    QGraphicsView::mousePressEvent(event);
+    AbstractView::mousePressEvent(event);
 }
 
 void PlotView::mouseMoveEvent(QMouseEvent *event)
 {
-    QGraphicsView::mouseMoveEvent(event);
+    AbstractView::mouseMoveEvent(event);
 }
 
 void PlotView::mouseReleaseEvent(QMouseEvent *event)
 {
-    QGraphicsView::mouseReleaseEvent(event);
+    AbstractView::mouseReleaseEvent(event);
 }
 
 void PlotView::wheelEvent(QWheelEvent *event)
 {
-    //QGraphicsView::wheelEvent(event); // implementa wheel scroll
+    qDebug() << "PlotView wheelEvent";
     event->ignore();
+    AbstractView::wheelEvent(event);
 }

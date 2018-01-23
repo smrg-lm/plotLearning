@@ -43,12 +43,17 @@ PlotWidget::PlotWidget(QWidget *parent)
     connect(_plot->verticalScrollBar(), SIGNAL(valueChanged(int)),
             _verticalScrollView->verticalScrollBar(), SLOT(setValue(int)));
 
-    // sync zoom
     _plot->setZoomOnResize(false); // TEST
+    // sync zoom
     connect(_plot, SIGNAL(scaleChanged(qreal,qreal)),
             _horizontalScrollView, SLOT(updateScale(qreal,qreal)));
+    connect(_horizontalScrollView, SIGNAL(scaleChanged(qreal,qreal)),
+            _plot, SLOT(updateScale(qreal,qreal)));
+
     connect(_plot, SIGNAL(scaleChanged(qreal,qreal)),
             _verticalScrollView, SLOT(updateScale(qreal,qreal)));
+    connect(_verticalScrollView, SIGNAL(scaleChanged(qreal,qreal)),
+            _plot, SLOT(updateScale(qreal,qreal)));
 
     qDebug() << "sizeHint: " << _plot->sizeHint();
     qDebug() << "sizeHint: " << _horizontalScrollView->sizeHint();

@@ -4,6 +4,8 @@
 #include <QMouseEvent>
 #include <QWheelEvent>
 
+#include <QDebug>
+
 ScrollView::ScrollView(QWidget *parent)
     : AbstractView(parent)
 {
@@ -77,6 +79,7 @@ void ScrollView::mouseReleaseEvent(QMouseEvent *event)
 
 void ScrollView::wheelEvent(QWheelEvent *event)
 {
-    //QGraphicsView::wheelEvent(event); // implementa wheel scroll
+    qDebug() << "ScrollView wheelEvent";
     event->ignore();
+    AbstractView::wheelEvent(event); // implementa wheel scroll
 }

@@ -115,5 +115,7 @@ void VisualGroup::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void VisualGroup::wheelEvent(QGraphicsSceneWheelEvent *event)
 {
+    qDebug() << "VisualGroup wheelEvent";
+    event->ignore(); // para zoom con wheel en av, pero no pasa por acá, algo entiendo mal
     QGraphicsObject::wheelEvent(event);
 }

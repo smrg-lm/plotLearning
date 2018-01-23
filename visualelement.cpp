@@ -91,7 +91,10 @@ void VisualElement::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     QGraphicsItem::mouseReleaseEvent(event);
 }
 
+
 void VisualElement::wheelEvent(QGraphicsSceneWheelEvent *event)
 {
+    qDebug() << "VisualElement wheelEvent";
+    event->ignore(); // para zoom con wheel en av
     QGraphicsItem::wheelEvent(event);
 }
