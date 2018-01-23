@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     rulearea.cpp \
     visualgroup.cpp \
     visualelement.cpp \
-    visualwave.cpp
+    visualwave.cpp \
+    controlpoint.cpp
 
 HEADERS  += \
     workarea.h \
@@ -33,4 +34,5 @@ HEADERS  += \
     rulearea.h \
     visualgroup.h \
     visualelement.h \
-    visualwave.h
+    visualwave.h \
+    controlpoint.h

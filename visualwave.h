@@ -3,7 +3,7 @@
 
 #include "visualgroup.h"
 
-class VisualElement;
+class ControlPoint;
 
 class VisualWave : public VisualGroup
 {
@@ -16,7 +16,7 @@ public:
 
 private:
     QList<qreal> fakeData;
-    QList<VisualElement*> vElements;
+    QList<ControlPoint*> vElements;
 };
 
 #endif // VISUALWAVE_H

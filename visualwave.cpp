@@ -1,5 +1,5 @@
 #include "visualwave.h"
-#include "visualelement.h"
+#include "controlpoint.h"
 
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
@@ -20,7 +20,9 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &
     // cached elements, aparecen según LOD (isVisible) y visibleRect
     // ver GraphicsScene::minimumRenderSize, tal vez no sea necesario
     for(int i; i < this->size().width() / 4; i++) {
-        vElements.append(new VisualElement(this, QPointF(), QSizeF(1, 1)));
+        ControlPoint *cp = new ControlPoint(this, QPointF(), QSizeF(10, 10));
+        cp->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+        vElements.append(cp);
     }
 }
 
@@ -80,7 +82,8 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
             // así no se pueden mover, mal, tal vez se puede checkar
             // que no haya cambiado visibleRect, tal vez se puede hacer
             // de otra manera totalmente distinta mejor
-            vElements[i]->setPos(dataPos, y);
+            //vElements[i]->setPos(dataPos, y);
+            vElements[i]->setCenterPos(QPointF(dataPos, y));
             vElements[i]->setVisible(true);
         }
     } else {
