@@ -16,7 +16,7 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &
         fakeData.append(dist(e2));
     }
 
-    // cached elements
+    // cached elements, aparecen según LOD (isVisible)
     for(int i; i < 10; i++) {
         vElements.append(new VisualElement(this));
     }
@@ -29,9 +29,12 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     Q_UNUSED(painter);
 
     // por ahora, el largo del widget vw es igual a la cantidad de muestras
-    QRectF vr = this->visibleRect();
+    QRectF vr = this->visibleRect(); // *** el rectángulo se actualiza mal?
+
     // si no es visible *return* (¿antes o después de drawRect? ¿qué hace QGraphicsView?)
     // si no cambió la visibilidad *return*
+
+    // *** se actualiza mal por redondeo? no parece
     int startPos = (int)round(vr.left());
     int endPos = startPos + (int)round(vr.width());
 
@@ -60,6 +63,10 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
         qreal y2 = linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
         prevPos = i;
 
-        painter->drawLine(x1, y1, x2, y2); // hay artefactos al hacer srcoll de gv con scrollview
+        //qDebug() << "x1: " << x1;
+        qDebug() << "y1: " << y1;
+        //qDebug() << "x2: " << x2;
+        qDebug() << "y2: " << y2;
+        painter->drawLine(x1, y1, x2, y2); // *** hay artefactos al hacer srcoll de gv con scrollview
     }
 }

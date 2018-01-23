@@ -26,7 +26,7 @@ WorkArea::WorkArea(QGraphicsItem *parent)
         mList.append(new VisualElement(this, QPoint(i * 25, i * 25), QSize(25, 25)));
     }
 
-    new VisualWave(this, QPointF(0, 0), QSizeF(300, 100));
+    new VisualWave(this, QPointF(0, 0), QSizeF(300, 300));
 }
 
 void WorkArea::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
