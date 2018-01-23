@@ -1,5 +1,7 @@
 #include "visualgroup.h"
 
+#include <QGraphicsView>
+#include <QGraphicsScene>
 #include <QPainter>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSceneWheelEvent>
@@ -7,10 +9,8 @@
 #include <QDebug>
 
 VisualGroup::VisualGroup(QGraphicsItem *parent)
-    : QGraphicsObject(parent)
-{
-    this->setFlag(QGraphicsItem::ItemIsMovable, true); // TEST
-}
+    : VisualGroup(parent, QPointF(), QSizeF())
+{}
 
 VisualGroup::VisualGroup(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size)
     : QGraphicsObject(parent), _boundingRect(QRectF(QPointF(0, 0), size))
@@ -51,6 +51,22 @@ void VisualGroup::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     painter->drawRect(_boundingRect);
 }
 
+QRectF VisualGroup::visibleRect() const
+{
+    QGraphicsView *view = this->scene()->views()[0]; // solo una! check nil (es para redo)
+    QPointF viewSize(
+                view->viewport()->size().width(),
+                view->viewport()->size().height());
+
+    QPointF tl = this->deviceTransform(view->viewportTransform())
+            .inverted().map(QPointF(0, 0));
+    QPointF br = this->deviceTransform(view->viewportTransform())
+            .inverted().map(viewSize);
+
+    // intersección de la vista con el item en coordenadas locales
+    return _boundingRect.intersected(QRectF(tl, br));
+}
+
 void VisualGroup::clipPosToParent()
 {
     VisualGroup *parent = static_cast<VisualGroup*>(this->parentItem());
@@ -63,9 +79,13 @@ void VisualGroup::clipPosToParent()
         newPos.setX(pos.x());
     if(!(pos.y() < 0))
         newPos.setY(pos.y());
-    if(pos.x() + _boundingRect.width() > parent->boundingRect().width())
+
+    if(_boundingRect.width() <= parent->boundingRect().width() &&
+            pos.x() + _boundingRect.width() > parent->boundingRect().width())
         newPos.setX(parent->boundingRect().width() - _boundingRect.width());
-    if(pos.y() + _boundingRect.height() > parent->boundingRect().height())
+
+    if(_boundingRect.height() <= parent->boundingRect().height() &&
+            pos.y() + _boundingRect.height() > parent->boundingRect().height())
         newPos.setY(parent->boundingRect().height() - _boundingRect.height());
 
     this->setPos(newPos);
@@ -79,6 +99,7 @@ void VisualGroup::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 void VisualGroup::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsObject::mousePressEvent(event);
+    qDebug() << "visibleRect: " << this->visibleRect();
 }
 
 void VisualGroup::mouseMoveEvent(QGraphicsSceneMouseEvent *event)

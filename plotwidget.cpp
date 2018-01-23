@@ -2,6 +2,7 @@
 #include "plotview.h"
 #include "scrollview.h"
 #include "rulearea.h"
+#include "workarea.h"
 
 #include <QGridLayout>
 #include <QScrollBar>

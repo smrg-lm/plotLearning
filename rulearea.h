@@ -11,12 +11,12 @@ public:
     RuleArea(QGraphicsItem *parent = 0);
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *widget = 0); Q_DECL_OVERRIDE
+               QWidget *widget = 0) override;
 
 protected:
-    void mousePressEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 };
 
 #endif // RULEAREA_H

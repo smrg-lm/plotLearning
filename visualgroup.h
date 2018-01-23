@@ -16,19 +16,20 @@ public:
 
     QSizeF size() const;
     void setSize(const QSizeF &size);
-    QRectF boundingRect() const; Q_DECL_OVERRIDE
+    QRectF boundingRect() const override;
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *widget = 0); Q_DECL_OVERRIDE
+               QWidget *widget = 0) override;
 
-    void clipPosToParent();
+    QRectF visibleRect() const; // redo, usa view
+    void clipPosToParent(); // qué hacer cuando el sub-elemento es más grande que parent
 
 protected:
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
-    void mousePressEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
-    void wheelEvent(QGraphicsSceneWheelEvent *event); Q_DECL_OVERRIDE
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    void wheelEvent(QGraphicsSceneWheelEvent *event) override;
 
 private:
     QRectF _boundingRect;

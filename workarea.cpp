@@ -5,13 +5,14 @@
 // TEST
 #include "visualgroup.h"
 #include "visualelement.h"
+#include "visualwave.h"
 #include <QDebug>
 
 WorkArea::WorkArea(QGraphicsItem *parent)
     : VisualGroup(parent)
 {
     this->setSize(QSizeF(500, 500)); // TEST
-    // begin TEST
+
     VisualGroup *vg = new VisualGroup(this, QPointF(0, 0), QSizeF(200, 100));
     new VisualElement(vg, QPointF(0, 0), QSizeF(25, 25));
     new VisualElement(vg, QPointF(25, 25), QSizeF(25, 25));
@@ -20,7 +21,12 @@ WorkArea::WorkArea(QGraphicsItem *parent)
     qDebug() << "children: " << this->childItems();
     qDebug() << "children: " << vg->childItems();
     qDebug() << "vg visible: " << vg->isVisible();
-    // end TEST
+
+    for(int i = 0; i < 25; i++) { // excede apropósito
+        mList.append(new VisualElement(this, QPoint(i * 25, i * 25), QSize(25, 25)));
+    }
+
+    new VisualWave(this, QPointF(0, 0), QSizeF(300, 100));
 }
 
 void WorkArea::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,

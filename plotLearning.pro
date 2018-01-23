@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = plotLearning
 TEMPLATE = app
 
+CONFIG += c++11 strict_c++
 
 SOURCES += main.cpp\
     workarea.cpp \
@@ -20,7 +21,8 @@ SOURCES += main.cpp\
     abstractview.cpp \
     rulearea.cpp \
     visualgroup.cpp \
-    visualelement.cpp
+    visualelement.cpp \
+    visualwave.cpp
 
 HEADERS  += \
     workarea.h \
@@ -30,4 +32,5 @@ HEADERS  += \
     abstractview.h \
     rulearea.h \
     visualgroup.h \
-    visualelement.h
+    visualelement.h \
+    visualwave.h

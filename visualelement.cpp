@@ -8,10 +8,8 @@
 #include <QDebug>
 
 VisualElement::VisualElement(QGraphicsItem *parent)
-    : QGraphicsItem(parent)
-{
-    this->setFlag(QGraphicsItem::ItemIsMovable, true); // TEST
-}
+    : VisualElement(parent, QPointF(), QSizeF())
+{}
 
 VisualElement::VisualElement(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size)
     : QGraphicsItem(parent), _boundingRect(QRectF(QPointF(0, 0), size))

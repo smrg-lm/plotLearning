@@ -14,19 +14,19 @@ public:
 
     QSizeF size() const;
     void setSize(const QSizeF &rect);
-    QRectF boundingRect() const; Q_DECL_OVERRIDE
+    QRectF boundingRect() const override;
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *widget = 0); Q_DECL_OVERRIDE
+               QWidget *widget = 0) override;
 
-    void clipPosToParent();
+    void clipPosToParent(); // no sync con vg
 
 protected:
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
-    void mousePressEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event); Q_DECL_OVERRIDE
-    void wheelEvent(QGraphicsSceneWheelEvent *event); Q_DECL_OVERRIDE
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    void wheelEvent(QGraphicsSceneWheelEvent *event) override;
 
 private:
     QRectF _boundingRect;

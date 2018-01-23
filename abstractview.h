@@ -12,13 +12,16 @@ class AbstractView : public QGraphicsView
 public:
     AbstractView(QWidget *parent = 0);
 
-    bool zoomOnResize() const { return _zoomOnResize; }
+    bool zoomOnResize() const { return _zoomOnResize; } // probar QGraphicsView::fitInView
     void setZoomOnResize(bool value) { _zoomOnResize = value; }
-    void resizeEvent(QResizeEvent *event); Q_DECL_OVERRIDE
-    void scale(qreal sx, qreal sy) {
+    void resizeEvent(QResizeEvent *event) override; // probar QGraphicsView::fitInView
+    void scale(qreal sx, qreal sy) { // probar QGraphicsView::fitInView
         QGraphicsView::scale(sx, sy);
         emit scaleChanged(sx, sy);
     }
+
+    // QGraphicsView transformationAnchor : ViewportAnchor
+    // QGraphicsView::isInteractive()
 
 signals:
     void scaleChanged(qreal sx, qreal sy);
