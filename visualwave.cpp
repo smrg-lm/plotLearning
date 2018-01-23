@@ -2,6 +2,7 @@
 #include "visualelement.h"
 
 #include <QPainter>
+#include <QStyleOptionGraphicsItem>
 
 #include <QDebug>
 
@@ -16,29 +17,27 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &
         fakeData.append(dist(e2));
     }
 
-    // cached elements, aparecen según LOD (isVisible)
-    for(int i; i < 10; i++) {
-        vElements.append(new VisualElement(this));
+    // cached elements, aparecen según LOD (isVisible) y visibleRect
+    // ver GraphicsScene::minimumRenderSize, tal vez no sea necesario
+    for(int i; i < this->size().width() / 4; i++) {
+        vElements.append(new VisualElement(this, QPointF(), QSizeF(1, 1)));
     }
 }
 
 void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    Q_UNUSED(option);
     Q_UNUSED(widget);
-    Q_UNUSED(painter);
 
     // por ahora, el largo del widget vw es igual a la cantidad de muestras
     QRectF vr = this->visibleRect(); // *** el rectángulo se actualiza mal? no parece
-
     // si no es visible *return* (¿antes o después de drawRect? ¿qué hace QGraphicsView?)
     // si no cambió la visibilidad *return*
-
     // *** se actualiza mal por redondeo? no parece
     int startPos = (int)round(vr.left());
 
     // *** TEST por artefactos: se soluciona, pero buscar la causa
-    // *** Igual falla jugando con el zoom
+    // *** Igual falla jugando con el zoom, pero tal vez necesite un update al hacer scale sobre los elementos visualizados
+    // *** El problema es que no actualiza el render!
     int rightOffScreen = (fakeData.length() - (startPos + (int)round(vr.width())));
     if(rightOffScreen >= 10) rightOffScreen = 10;
     int endPos = startPos + (int)round(vr.width()) + rightOffScreen;
@@ -47,6 +46,9 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     qDebug() << "start: " << startPos;
     qDebug() << "end: " << endPos;
     qDebug() << "loop size: " << endPos - startPos;
+
+    qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
+    qDebug() << "LOD: " << lod;
 
     // linlin
     //(this-inMin)/(inMax-inMin) * (outMax-outMin) + outMin;
@@ -67,11 +69,23 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
         qreal x2 = i;
         qreal y2 = linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
         prevPos = i;
-
-        //qDebug() << "x1: " << x1;
-        qDebug() << "y1: " << y1;
-        //qDebug() << "x2: " << x2;
-        qDebug() << "y2: " << y2;
         painter->drawLine(x1, y1, x2, y2); // *** hay artefactos al hacer srcoll de gv con scrollview lento (puede ser que no actualiza?)
+    }
+
+    if(lod > 4) { // totalmente a ojo/azar
+        for(int i = 0; i < vElements.size(); i++) {
+            int dataPos = startPos + i;
+            if(dataPos >= fakeData.size()) break;
+            qreal y = linlin(fakeData[dataPos], -1, 1, 0, this->boundingRect().height());
+            // así no se pueden mover, mal, tal vez se puede checkar
+            // que no haya cambiado visibleRect, tal vez se puede hacer
+            // de otra manera totalmente distinta mejor
+            vElements[i]->setPos(dataPos, y);
+            vElements[i]->setVisible(true);
+        }
+    } else {
+        for(int i = 0; i < vElements.size(); i++) {
+            vElements[i]->setVisible(false); // hacer un flag para el if, choca con visibleRect:return
+        }
     }
 }
