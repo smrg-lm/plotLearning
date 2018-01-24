@@ -7,6 +7,8 @@ class ControlPoint;
 
 class VisualWave : public VisualGroup
 {
+    Q_OBJECT
+
 public:
     VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size);
     using VisualGroup::VisualGroup;

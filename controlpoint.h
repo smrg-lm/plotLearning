@@ -9,9 +9,8 @@ public:
     using VisualElement::VisualElement;
 
     QPainterPath shape() const override;
-    QPointF center() const { return this->boundingRect().center(); } // QTextStream??? UAT???
-    void setCenterPos(const QPointF &pos) {
-        this->setPos(pos - this->mapToParent(this->center())); } // genera un loop?
+    QPointF center() const; // qtcreator tooltip points to QTextStream::center()
+    void setCenterPos(const QPointF &pos);
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget) override;

@@ -30,24 +30,20 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 {
     Q_UNUSED(widget);
 
+    /*
+     * QGraphicsItem::paint()
+     * Note: it is mandatory that an item will always redraw itself in the exact
+     * same way, unless update() was called; otherwise visual artifacts may occur.
+     * In other words, two subsequent calls to paint() must always produce the same
+     * output, unless update() was called between them.
+     *
+     * No se pueden cambiar los estados en el método paint()
+     */
+
     // por ahora, el largo del widget vw es igual a la cantidad de muestras
-    QRectF vr = this->visibleRect(); // *** el rectángulo se actualiza mal? no parece
-    // si no es visible *return* (¿antes o después de drawRect? ¿qué hace QGraphicsView?)
-    // si no cambió la visibilidad *return*
-    // *** se actualiza mal por redondeo? no parece
+    QRectF vr = this->visibleRect();
     int startPos = (int)round(vr.left());
-
-    // *** TEST por artefactos: se soluciona, pero buscar la causa
-    // *** Igual falla jugando con el zoom, pero tal vez necesite un update al hacer scale sobre los elementos visualizados
-    // *** El problema es que no actualiza el render!
-    int rightOffScreen = (fakeData.length() - (startPos + (int)round(vr.width())));
-    if(rightOffScreen >= 10) rightOffScreen = 10;
-    int endPos = startPos + (int)round(vr.width()) + rightOffScreen;
-
-    qDebug() << "list size: " << fakeData.size();
-    qDebug() << "start: " << startPos;
-    qDebug() << "end: " << endPos;
-    qDebug() << "loop size: " << endPos - startPos;
+    int endPos = startPos + (int)round(vr.width());
 
     qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
     qDebug() << "LOD: " << lod;
@@ -74,6 +70,7 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
         painter->drawLine(x1, y1, x2, y2); // *** hay artefactos al hacer srcoll de gv con scrollview lento (puede ser que no actualiza?)
     }
 
+    //  no se puede setear estas propiedades de los items dentro de paint
     if(lod > 4) { // totalmente a ojo/azar
         for(int i = 0; i < vElements.size(); i++) {
             int dataPos = startPos + i;
@@ -82,8 +79,8 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
             // así no se pueden mover, mal, tal vez se puede checkar
             // que no haya cambiado visibleRect, tal vez se puede hacer
             // de otra manera totalmente distinta mejor
-            //vElements[i]->setPos(dataPos, y);
-            vElements[i]->setCenterPos(QPointF(dataPos, y));
+            vElements[i]->setPos(dataPos, y);
+            //vElements[i]->setCenterPos(QPointF(dataPos, y));
             vElements[i]->setVisible(true);
         }
     } else {

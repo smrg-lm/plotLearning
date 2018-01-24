@@ -10,6 +10,16 @@ QPainterPath ControlPoint::shape() const
     return path;
 }
 
+QPointF ControlPoint::center() const
+{
+    return this->boundingRect().center();
+}
+
+void ControlPoint::setCenterPos(const QPointF &pos)
+{
+    this->setPos(pos - this->mapToParent(this->center()));
+}
+
 void ControlPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     Q_UNUSED(option);
