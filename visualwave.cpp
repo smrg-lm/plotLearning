@@ -68,8 +68,8 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     p.setWidth(0);
     painter->setPen(p);
     painter->drawRect(this->boundingRect());
+
     this->updatePathItem();
-    painter->drawPath(pathItem.path());
 
     /*
     //  no se puede setear estas propiedades de los items dentro de paint
