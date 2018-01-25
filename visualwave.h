@@ -17,8 +17,11 @@ public:
                QWidget *widget = 0) override;
 
 private:
+    void updatePathItem();
+
     QList<qreal> fakeData;
     QList<ControlPoint*> vElements;
+    QGraphicsPathItem pathItem;
 };
 
 #endif // VISUALWAVE_H

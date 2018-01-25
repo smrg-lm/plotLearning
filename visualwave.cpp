@@ -21,6 +21,7 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &
         fakeData.append(dist(e2));
     }
 
+    /*
     // cached elements, aparecen según LOD (isVisible) y visibleRect
     // ver GraphicsScene::minimumRenderSize, tal vez no sea necesario
     for(int i; i < this->size().width() / 4; i++) {
@@ -28,10 +29,17 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &
         cp->setFlag(QGraphicsItem::ItemIgnoresTransformations);
         vElements.append(cp);
     }
+    */
+
+    // QGraphicsPathItem (QPainterPath)
+    pathItem.setParentItem(this);
+    QPen pen; pen.setWidth(0);
+    pathItem.setPen(pen);
 }
 
 void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    Q_UNUSED(option);
     Q_UNUSED(widget);
 
     /*
@@ -45,11 +53,7 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
      * llaman a update()
      */
 
-    // por ahora, el largo del widget vw es igual a la cantidad de muestras
-    QRectF vr = this->visibleRect();
-    int startPos = (int)round(vr.left());
-    int endPos = startPos + (int)round(vr.width());
-
+    /*
     // worldTransform es == a QGraphicsView::transform() o viewportTransform() ?
     qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
     qDebug() << "LOD: " << lod;
@@ -57,29 +61,17 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     qDebug() << "worldTransform: " << painter->worldTransform();
     qDebug() << "sceneasdfasdff: " << this->scene()->views()[0]->transform();
     qDebug() << "tfasdfasdfasdf: " << (this->scene()->views()[0]->transform() == painter->worldTransform());
-
-    // linlin
-    //(this-inMin)/(inMax-inMin) * (outMax-outMin) + outMin;
-    auto linlin = [] (qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax) {
-        return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
-    };
+    */
 
     painter->setBrush(Qt::lightGray);
     QPen p;
     p.setWidth(0);
     painter->setPen(p);
     painter->drawRect(this->boundingRect());
+    this->updatePathItem();
+    painter->drawPath(pathItem.path());
 
-    int prevPos = startPos;
-    for(int i = startPos + 1; i < endPos; i++) {
-        qreal x1 = prevPos;
-        qreal y1 = linlin(fakeData[prevPos], -1, 1, 0, this->boundingRect().height());
-        qreal x2 = i;
-        qreal y2 = linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
-        prevPos = i;
-        painter->drawLine(x1, y1, x2, y2); // *** hay artefactos al hacer srcoll de gv con scrollview lento (puede ser que no actualiza?)
-    }
-
+    /*
     //  no se puede setear estas propiedades de los items dentro de paint
     if(lod > 4) { // totalmente a ojo/azar
         for(int i = 0; i < vElements.size(); i++) {
@@ -98,4 +90,31 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
             vElements[i]->setVisible(false); // hacer un flag para el if, choca con visibleRect:return
         }
     }
+    */
+}
+
+void VisualWave::updatePathItem()
+{
+    // linlin: (this-inMin)/(inMax-inMin) * (outMax-outMin) + outMin;
+    auto linlin = [] (qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax) {
+        return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
+    };
+
+    QRectF vr = this->visibleRect();
+    int startPos = (int)round(vr.left());
+    int endPos = startPos + (int)round(vr.width());
+
+    QPainterPath path;
+
+    qreal x = startPos;
+    qreal y = linlin(fakeData[startPos], -1, 1, 0, this->boundingRect().height());
+    path.moveTo(x, y);
+
+    for(int i = startPos + 1; i < endPos; i++) {
+        x = i;
+        y = linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
+        path.lineTo(x, y);
+    }
+
+    pathItem.setPath(path);
 }
