@@ -76,7 +76,6 @@ void VisualWave::updatePathItems(qreal lod)
     if(lod > minLod) {
         // counter transform por  point size (QTransform::map documentation)
         QGraphicsView *view = this->getCurrentActiveView();
-        // no funciona con los scrolls de mano porque no hay vista activa...
         if(!(view == 0)) {
             QTransform t;
             qreal ox, oy;
