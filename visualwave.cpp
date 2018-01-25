@@ -3,6 +3,7 @@
 
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
+#include <QGraphicsSceneMouseEvent>
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
@@ -24,11 +25,12 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &
     // QGraphicsPathItem (QPainterPath)
     QPen pen; pen.setWidth(0);
     controlPoints.setParentItem(this);
-    //controlPoints.setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
     controlPoints.setPen(pen);
     controlPoints.setBrush(Qt::gray);
     pathItem.setParentItem(this);
     pathItem.setPen(pen);
+
+    pointSelected = false;
 }
 
 void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -48,7 +50,40 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     this->updatePathItems(lod); // confirmar que actualiza correctamente
 }
 
-void VisualWave::updatePathItems(qreal lod)
+void VisualWave::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+{
+    VisualGroup::mouseDoubleClickEvent(event);
+}
+
+void VisualWave::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if(controlPoints.contains(event->pos())) {
+        pointSelected = true;
+        //event->accept(); // por defecto acepta
+    } else {
+        VisualGroup::mousePressEvent(event); // se necesita para itemmove en los tres handlers
+    }
+}
+
+void VisualWave::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    if(pointSelected) {
+        this->editPoint(event->pos());
+    } else {
+        VisualGroup::mouseMoveEvent(event);
+    }
+}
+
+void VisualWave::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    if(pointSelected) {
+        pointSelected = false;
+    } else {
+        VisualGroup::mouseReleaseEvent(event);
+    }
+}
+
+void VisualWave::updatePathItems(const qreal &lod)
 {
     // linlin: (this-inMin)/(inMax-inMin) * (outMax-outMin) + outMin;
     auto linlin = [] (qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax) {
@@ -104,4 +139,9 @@ void VisualWave::updatePathItems(qreal lod)
 
     pathItem.setPath(path);
     controlPoints.setPath(controls);
+}
+
+void VisualWave::editPoint(const QPointF &point)
+{
+
 }
