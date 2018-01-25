@@ -4,7 +4,11 @@
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 
+#include <QGraphicsView>
+#include <QGraphicsScene>
+
 #include <QDebug>
+
 
 VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size)
     : VisualGroup(parent, pos, size)
@@ -37,7 +41,8 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
      * In other words, two subsequent calls to paint() must always produce the same
      * output, unless update() was called between them.
      *
-     * No se pueden cambiar los estados en el método paint()
+     * No se pueden cambiar los estados en el método paint(), menos aún los que
+     * llaman a update()
      */
 
     // por ahora, el largo del widget vw es igual a la cantidad de muestras
@@ -45,8 +50,13 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     int startPos = (int)round(vr.left());
     int endPos = startPos + (int)round(vr.width());
 
+    // worldTransform es == a QGraphicsView::transform() o viewportTransform() ?
     qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
     qDebug() << "LOD: " << lod;
+
+    qDebug() << "worldTransform: " << painter->worldTransform();
+    qDebug() << "sceneasdfasdff: " << this->scene()->views()[0]->transform();
+    qDebug() << "tfasdfasdfasdf: " << (this->scene()->views()[0]->transform() == painter->worldTransform());
 
     // linlin
     //(this-inMin)/(inMax-inMin) * (outMax-outMin) + outMin;
