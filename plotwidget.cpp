@@ -19,7 +19,7 @@ PlotWidget::PlotWidget(QWidget *parent)
     _layout->setMargin(0);
     _layout->setContentsMargins(0, 0, 0, 0);
 
-    _plot = new PlotView(this);
+    _plot = new PlotView();
     _layout->addWidget(_plot, 1, 0);
 
     // sync horizontal scroll

@@ -21,19 +21,13 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &
         fakeData.append(dist(e2));
     }
 
-    /*
-    // cached elements, aparecen según LOD (isVisible) y visibleRect
-    // ver GraphicsScene::minimumRenderSize, tal vez no sea necesario
-    for(int i; i < this->size().width() / 4; i++) {
-        ControlPoint *cp = new ControlPoint(this, QPointF(), QSizeF(10, 10));
-        cp->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-        vElements.append(cp);
-    }
-    */
-
     // QGraphicsPathItem (QPainterPath)
-    pathItem.setParentItem(this);
     QPen pen; pen.setWidth(0);
+    controlPoints.setParentItem(this);
+    //controlPoints.setFlag(QGraphicsItem::ItemIgnoresTransformations, true);
+    controlPoints.setPen(pen);
+    controlPoints.setBrush(Qt::gray);
+    pathItem.setParentItem(this);
     pathItem.setPen(pen);
 }
 
@@ -42,58 +36,19 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
-    /*
-     * QGraphicsItem::paint()
-     * Note: it is mandatory that an item will always redraw itself in the exact
-     * same way, unless update() was called; otherwise visual artifacts may occur.
-     * In other words, two subsequent calls to paint() must always produce the same
-     * output, unless update() was called between them.
-     *
-     * No se pueden cambiar los estados en el método paint(), menos aún los que
-     * llaman a update()
-     */
-
-    /*
-    // worldTransform es == a QGraphicsView::transform() o viewportTransform() ?
-    qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
-    qDebug() << "LOD: " << lod;
-
-    qDebug() << "worldTransform: " << painter->worldTransform();
-    qDebug() << "sceneasdfasdff: " << this->scene()->views()[0]->transform();
-    qDebug() << "tfasdfasdfasdf: " << (this->scene()->views()[0]->transform() == painter->worldTransform());
-    */
-
     painter->setBrush(Qt::lightGray);
     QPen p;
     p.setWidth(0);
     painter->setPen(p);
     painter->drawRect(this->boundingRect());
 
-    this->updatePathItem();
-
-    /*
-    //  no se puede setear estas propiedades de los items dentro de paint
-    if(lod > 4) { // totalmente a ojo/azar
-        for(int i = 0; i < vElements.size(); i++) {
-            int dataPos = startPos + i;
-            if(dataPos >= fakeData.size()) break;
-            qreal y = linlin(fakeData[dataPos], -1, 1, 0, this->boundingRect().height());
-            // así no se pueden mover, mal, tal vez se puede checkar
-            // que no haya cambiado visibleRect, tal vez se puede hacer
-            // de otra manera totalmente distinta mejor
-            vElements[i]->setPos(dataPos, y);
-            //vElements[i]->setCenterPos(QPointF(dataPos, y));
-            vElements[i]->setVisible(true);
-        }
-    } else {
-        for(int i = 0; i < vElements.size(); i++) {
-            vElements[i]->setVisible(false); // hacer un flag para el if, choca con visibleRect:return
-        }
-    }
-    */
+    // pero lod no indica diferencia h/v
+    // tal ve hay que usar QGraphicsItem::deviceTransform (ver doc)
+    qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
+    this->updatePathItems(lod); // confirmar que actualiza correctamente
 }
 
-void VisualWave::updatePathItem()
+void VisualWave::updatePathItems(qreal lod)
 {
     // linlin: (this-inMin)/(inMax-inMin) * (outMax-outMin) + outMin;
     auto linlin = [] (qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax) {
@@ -103,18 +58,51 @@ void VisualWave::updatePathItem()
     QRectF vr = this->visibleRect();
     int startPos = (int)round(vr.left());
     int endPos = startPos + (int)round(vr.width());
+    //  ^^^^^^ en algún caso, tal vez zoom extremo, se va de rango
+    // -> ASSERT failure in QList<T>::operator[]: "index out of range"
 
     QPainterPath path;
+    QPainterPath controls;
 
+    // pathItem
     qreal x = startPos;
     qreal y = linlin(fakeData[startPos], -1, 1, 0, this->boundingRect().height());
     path.moveTo(x, y);
 
+    // controlPoints
+    qreal minLod = 8;
+    qreal pointSize = 5; // untransformed
+    qreal pointSizeX, pointSizeY;
+    if(lod > minLod) {
+        // counter transform por  point size (QTransform::map documentation)
+        QGraphicsView *view = this->getCurrentActiveView();
+        // no funciona con los scrolls de mano porque no hay vista activa...
+        if(!(view == 0)) {
+            QTransform t;
+            qreal ox, oy;
+
+            t = this->deviceTransform(view->viewportTransform()).inverted();
+            ox = oy = pointSize;
+
+            pointSizeX = t.m11() * ox + t.m21() * oy;
+            pointSizeY = t.m22() * oy + t.m12() * ox;
+            if(!t.isAffine()) {
+                qreal wp = t.m13() * ox + t.m23() * y + t.m33();
+                pointSizeX /= wp;
+                pointSizeY /= wp;
+            }
+        }
+        controls.addEllipse(QPointF(x, y), pointSizeX, pointSizeY);
+    }
+
+    // both
     for(int i = startPos + 1; i < endPos; i++) {
         x = i;
         y = linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
         path.lineTo(x, y);
+        if(lod > minLod) controls.addEllipse(QPointF(x, y), pointSizeX, pointSizeY);
     }
 
     pathItem.setPath(path);
+    controlPoints.setPath(controls);
 }

@@ -5,6 +5,7 @@
 
 class QGraphicsSceneMouseEvent;
 class QGraphicsSceneWheelEvent;
+class QGraphicsView;
 
 class VisualGroup : public QGraphicsObject // debería tener raíz común con VisualObject/Element
 {
@@ -23,6 +24,8 @@ public:
 
     QRectF visibleRect() const; // redo, usa view
     void clipPosToParent(); // qué hacer cuando el sub-elemento es más grande que parent
+
+    QGraphicsView *getCurrentActiveView();
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
