@@ -39,3 +39,25 @@ private:
 };
 
 #endif // VISUALWAVE_H
+
+/*
+ * Add edit mode:
+ * By sample (with tooltip) vs drawing
+ *
+ * Plotter modes:
+ * linear (default)
+ * points (could be non editable edit points)
+ * plines (points an lines)
+ * levels (just the level line by sample not bars
+ * steps
+ *
+ * Plotter also have resolution as visual sr
+ * however it doesn't prevent visual aliasing
+ *
+ * Other visualizations useful for audio:
+ * rms (pero puede que esto sea información "de" los datos)
+ * lpf at sr (analog imitation)
+ * bars (lin and bilin, sticks)
+ *
+ * Paths need to be optimezed for large data
+ */

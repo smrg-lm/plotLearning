@@ -1,4 +1,4 @@
-#include "controlpoint.h"
+#include "visualcontrolpoint.h"
 
 #include <QPainter>
 

@@ -23,7 +23,9 @@ SOURCES += main.cpp\
     visualgroup.cpp \
     visualelement.cpp \
     visualwave.cpp \
-    controlpoint.cpp
+    visualbrickwall.cpp \
+    brickwalllayout.cpp \
+    visualcontrolpoint.cpp
 
 HEADERS  += \
     workarea.h \
@@ -35,4 +37,6 @@ HEADERS  += \
     visualgroup.h \
     visualelement.h \
     visualwave.h \
-    controlpoint.h
+    visualbrickwall.h \
+    brickwalllayout.h \
+    visualcontrolpoint.h

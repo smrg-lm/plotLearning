@@ -1,5 +1,5 @@
 #include "visualwave.h"
-#include "controlpoint.h"
+#include "visualcontrolpoint.h"
 
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>

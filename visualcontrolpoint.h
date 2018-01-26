@@ -1,5 +1,5 @@
-#ifndef CONTROLPOINT_H
-#define CONTROLPOINT_H
+#ifndef VISUALCONTROLPOINT_H
+#define VISUALCONTROLPOINT_H
 
 #include "visualelement.h"
 
@@ -8,7 +8,7 @@ class ControlPoint : public VisualElement
 public:
     using VisualElement::VisualElement;
 
-    QPainterPath shape() const override;
+    QPainterPath shape() const override; // circle or square
     QPointF center() const; // qtcreator tooltip points to QTextStream::center()
     void setCenterPos(const QPointF &pos);
 
@@ -22,4 +22,4 @@ private:
     bool selected;
 };
 
-#endif // CONTROLPOINT_H
+#endif // VISUALCONTROLPOINT_H
