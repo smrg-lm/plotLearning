@@ -98,16 +98,16 @@ void VisualWave::updatePathItems(const qreal &lod)
     // ^^^^^^^^^ en algún caso, tal vez zoom extremo, se va de rango
     // -> ASSERT failure in QList<T>::operator[]: "index out of range"
 
-    QPainterPath path;
+    QPainterPath wavePath;
     QPainterPath controls;
 
     // waveShapeItem
     qreal x = visualStartPos;
     qreal y = this->linlin(fakeData[visualStartPos], -1, 1, 0, this->boundingRect().height());
-    path.moveTo(x, y);
+    wavePath.moveTo(x, y);
 
     // controlPointsItem
-    qreal minLod = 8;
+    qreal minLod = 6;
     qreal pointSizeX, pointSizeY;
     if(lod > minLod) {
         // counter transform por point size (QTransform::map documentation)
@@ -134,11 +134,11 @@ void VisualWave::updatePathItems(const qreal &lod)
     for(int i = visualStartPos + 1; i < visualEndPos; i++) {
         x = i;
         y = this->linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
-        path.lineTo(x, y);
+        wavePath.lineTo(x, y);
         if(lod > minLod) controls.addEllipse(QPointF(x, y), pointSizeX, pointSizeY);
     }
 
-    waveShapeItem.setPath(path);
+    waveShapeItem.setPath(wavePath);
     controlPointsItem.setPath(controls);
 }
 
