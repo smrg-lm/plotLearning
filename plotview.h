@@ -5,7 +5,7 @@
 
 class WorkArea;
 
-class PlotView : public AbstractView
+class PlotView : public BaseView
 {
     Q_OBJECT
 

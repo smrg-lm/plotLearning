@@ -1,16 +1,16 @@
-#ifndef ABSTRACTVIEW_H
-#define ABSTRACTVIEW_H
+#ifndef BASEVIEW_H
+#define BASEVIEW_H
 
 #include <QGraphicsView>
 
 // algún método debería ser pure abstract...
 // por ahora es simplemente base class
-class AbstractView : public QGraphicsView
+class BaseView : public QGraphicsView
 {
     Q_OBJECT
 
 public:
-    AbstractView(QWidget *parent = 0);
+    BaseView(QWidget *parent = 0);
 
     bool zoomOnResize() const { return _zoomOnResize; } // probar QGraphicsView::fitInView
     void setZoomOnResize(bool value) { _zoomOnResize = value; }
@@ -39,4 +39,4 @@ protected:
     bool _zoomOnResize;
 };
 
-#endif // ABSTRACTVIEW_H
+#endif // BASEVIEW_H

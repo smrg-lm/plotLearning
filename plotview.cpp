@@ -7,7 +7,7 @@
 #include <QDebug>
 
 PlotView::PlotView(QWidget *parent)
-    :AbstractView(parent)
+    :BaseView(parent)
 {
     _scene = new QGraphicsScene(this); // ownership
     this->setScene(_scene);
@@ -36,27 +36,27 @@ QRectF PlotView::waRect() const
 
 void PlotView::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    AbstractView::mouseDoubleClickEvent(event);
+    BaseView::mouseDoubleClickEvent(event);
 }
 
 void PlotView::mousePressEvent(QMouseEvent *event)
 {
-    AbstractView::mousePressEvent(event);
+    BaseView::mousePressEvent(event);
 }
 
 void PlotView::mouseMoveEvent(QMouseEvent *event)
 {
-    AbstractView::mouseMoveEvent(event);
+    BaseView::mouseMoveEvent(event);
 }
 
 void PlotView::mouseReleaseEvent(QMouseEvent *event)
 {
-    AbstractView::mouseReleaseEvent(event);
+    BaseView::mouseReleaseEvent(event);
 }
 
 void PlotView::wheelEvent(QWheelEvent *event)
 {
     qDebug() << "PlotView wheelEvent";
     event->ignore();
-    AbstractView::wheelEvent(event);
+    BaseView::wheelEvent(event);
 }

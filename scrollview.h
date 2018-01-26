@@ -5,7 +5,7 @@
 
 class RuleArea;
 
-class ScrollView : public AbstractView
+class ScrollView : public BaseView
 {
     Q_OBJECT
 

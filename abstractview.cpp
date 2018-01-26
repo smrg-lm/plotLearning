@@ -6,7 +6,7 @@
 
 #include <QDebug>
 
-AbstractView::AbstractView(QWidget *parent)
+BaseView::BaseView(QWidget *parent)
     :QGraphicsView(parent), _zoomOnResize(false)
 {
     this->setContentsMargins(0, 0, 0, 0);
@@ -15,7 +15,7 @@ AbstractView::AbstractView(QWidget *parent)
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
-void AbstractView::resizeEvent(QResizeEvent *event) // TEST
+void BaseView::resizeEvent(QResizeEvent *event) // TEST
 {
     if(_zoomOnResize && this->isActiveWindow()) { // isActiveWindow puede ser un problema también
         qreal sx = (qreal)event->size().width() /
@@ -29,7 +29,7 @@ void AbstractView::resizeEvent(QResizeEvent *event) // TEST
     QGraphicsView::resizeEvent(event);
 }
 
-void AbstractView::wheelEvent(QWheelEvent *event)
+void BaseView::wheelEvent(QWheelEvent *event)
 {
     qDebug() << "AbstractView wheelEvent: " << event;
 
@@ -50,13 +50,13 @@ void AbstractView::wheelEvent(QWheelEvent *event)
     event->accept();
 }
 
-void AbstractView::horizontalScrollByDelta(int d)
+void BaseView::horizontalScrollByDelta(int d)
 {
     this->horizontalScrollBar()->setValue(
                 this->horizontalScrollBar()->value() - d);
 }
 
-void AbstractView::verticalScrollByDelta(int d)
+void BaseView::verticalScrollByDelta(int d)
 {
     this->verticalScrollBar()->setValue(
                 this->verticalScrollBar()->value() - d);

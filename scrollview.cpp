@@ -7,7 +7,7 @@
 #include <QDebug>
 
 ScrollView::ScrollView(QWidget *parent)
-    : AbstractView(parent)
+    : BaseView(parent)
 {
     this->setOrientation(Qt::Horizontal);
 
@@ -81,5 +81,5 @@ void ScrollView::wheelEvent(QWheelEvent *event)
 {
     qDebug() << "ScrollView wheelEvent";
     event->ignore();
-    AbstractView::wheelEvent(event); // implementa wheel scroll
+    BaseView::wheelEvent(event); // implementa wheel scroll
 }
