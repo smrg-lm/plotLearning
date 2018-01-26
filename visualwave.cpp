@@ -99,7 +99,7 @@ void VisualWave::updatePathItems(const qreal &lod)
     // -> ASSERT failure in QList<T>::operator[]: "index out of range"
 
     QPainterPath wavePath;
-    QPainterPath controls;
+    QPainterPath controlsPath;
 
     // waveShapeItem
     qreal x = visualStartPos;
@@ -127,7 +127,7 @@ void VisualWave::updatePathItems(const qreal &lod)
                 pointSizeY /= wp;
             }
         }
-        controls.addEllipse(QPointF(x, y), pointSizeX, pointSizeY);
+        controlsPath.addEllipse(QPointF(x, y), pointSizeX, pointSizeY);
     }
 
     // both
@@ -135,11 +135,11 @@ void VisualWave::updatePathItems(const qreal &lod)
         x = i;
         y = this->linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
-        if(lod > minLod) controls.addEllipse(QPointF(x, y), pointSizeX, pointSizeY);
+        if(lod > minLod) controlsPath.addEllipse(QPointF(x, y), pointSizeX, pointSizeY);
     }
 
     waveShapeItem.setPath(wavePath);
-    controlPointsItem.setPath(controls);
+    controlPointsItem.setPath(controlsPath);
 }
 
 int VisualWave::obtainPointNumber(const QPointF &point)
