@@ -24,13 +24,11 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &
 
     // QGraphicsPathItem (QPainterPath)
     QPen pen; pen.setWidth(0);
-    controlPoints.setParentItem(this);
-    controlPoints.setPen(pen);
-    controlPoints.setBrush(Qt::gray);
-    pathItem.setParentItem(this);
-    pathItem.setPen(pen);
-
-    pointSelected = false;
+    controlPointsItem.setParentItem(this);
+    controlPointsItem.setPen(pen);
+    controlPointsItem.setBrush(Qt::gray);
+    waveShapeItem.setParentItem(this);
+    waveShapeItem.setPen(pen);
 }
 
 void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -57,8 +55,10 @@ void VisualWave::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 
 void VisualWave::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    if(controlPoints.contains(event->pos())) {
-        pointSelected = true;
+    if(controlPointsItem.contains(event->pos())) {
+        selectedPointNumber = this->obtainPointNumber(event->pos());
+        qDebug() << "selectePointNumber: " << selectedPointNumber;
+        if(selectedPointNumber > 0) pointSelected = true;
         //event->accept(); // por defecto acepta
     } else {
         VisualGroup::mousePressEvent(event); // se necesita para itemmove en los tres handlers
@@ -77,46 +77,47 @@ void VisualWave::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 void VisualWave::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     if(pointSelected) {
+        selectedPointNumber = -1;
         pointSelected = false;
     } else {
         VisualGroup::mouseReleaseEvent(event);
     }
 }
 
+qreal VisualWave::linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax)
+{
+    // sc linlin: (this-inMin)/(inMax-inMin) * (outMax-outMin) + outMin;
+    return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
+}
+
 void VisualWave::updatePathItems(const qreal &lod)
 {
-    // linlin: (this-inMin)/(inMax-inMin) * (outMax-outMin) + outMin;
-    auto linlin = [] (qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax) {
-        return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
-    };
-
     QRectF vr = this->visibleRect();
-    int startPos = (int)round(vr.left());
-    int endPos = startPos + (int)round(vr.width());
-    //  ^^^^^^ en algún caso, tal vez zoom extremo, se va de rango
+    visualStartPos = (int)round(vr.left());
+    visualEndPos = visualStartPos + (int)round(vr.width());
+    // ^^^^^^^^^ en algún caso, tal vez zoom extremo, se va de rango
     // -> ASSERT failure in QList<T>::operator[]: "index out of range"
 
     QPainterPath path;
     QPainterPath controls;
 
-    // pathItem
-    qreal x = startPos;
-    qreal y = linlin(fakeData[startPos], -1, 1, 0, this->boundingRect().height());
+    // waveShapeItem
+    qreal x = visualStartPos;
+    qreal y = this->linlin(fakeData[visualStartPos], -1, 1, 0, this->boundingRect().height());
     path.moveTo(x, y);
 
-    // controlPoints
+    // controlPointsItem
     qreal minLod = 8;
-    qreal pointSize = 5; // untransformed
     qreal pointSizeX, pointSizeY;
     if(lod > minLod) {
-        // counter transform por  point size (QTransform::map documentation)
+        // counter transform por point size (QTransform::map documentation)
         QGraphicsView *view = this->getCurrentActiveView();
         if(!(view == 0)) {
             QTransform t;
             qreal ox, oy;
 
             t = this->deviceTransform(view->viewportTransform()).inverted();
-            ox = oy = pointSize;
+            ox = oy = controlPointRadio; //controlPointRadio is untransformed
 
             pointSizeX = t.m11() * ox + t.m21() * oy;
             pointSizeY = t.m22() * oy + t.m12() * ox;
@@ -130,18 +131,38 @@ void VisualWave::updatePathItems(const qreal &lod)
     }
 
     // both
-    for(int i = startPos + 1; i < endPos; i++) {
+    for(int i = visualStartPos + 1; i < visualEndPos; i++) {
         x = i;
-        y = linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
+        y = this->linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
         path.lineTo(x, y);
         if(lod > minLod) controls.addEllipse(QPointF(x, y), pointSizeX, pointSizeY);
     }
 
-    pathItem.setPath(path);
-    controlPoints.setPath(controls);
+    waveShapeItem.setPath(path);
+    controlPointsItem.setPath(controls);
+}
+
+int VisualWave::obtainPointNumber(const QPointF &point)
+{
+    // las posiciones coinciden con las unidades del gráfico como números enteros
+    QList<QPolygonF> points = controlPointsItem.path().toSubpathPolygons();
+
+    for(int i = 0; i < points.size(); i++) {
+        if(points[i].containsPoint(point, Qt::OddEvenFill)) return i;
+    }
+
+    // may fail depending on the polygon representation
+    return -1;
 }
 
 void VisualWave::editPoint(const QPointF &point)
 {
-
+    // this is not cpu friendly (yet)
+    if(point.y() > this->boundingRect().height() || point.y() < 0) return;
+    qreal newValue = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
+    if(newValue > 1) newValue = 1; if(newValue < -1) newValue = -1;
+    // this needs some kind of range and resolution control
+    // and enable tooltip showing values in rt
+    fakeData[visualStartPos + selectedPointNumber] = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
+    this->update();
 }

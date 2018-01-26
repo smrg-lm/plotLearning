@@ -23,13 +23,19 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
+    qreal linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax);
     void updatePathItems(const qreal &lod);
+    int obtainPointNumber(const QPointF &point);
     void editPoint(const QPointF &point);
 
     QList<qreal> fakeData;
-    QGraphicsPathItem pathItem;
-    QGraphicsPathItem controlPoints;
-    bool pointSelected;
+    QGraphicsPathItem waveShapeItem;
+    QGraphicsPathItem controlPointsItem;
+    qreal controlPointRadio = 5;
+    bool pointSelected = false;
+    int selectedPointNumber = -1;
+    int visualStartPos = 0;
+    int visualEndPos = 0;
 };
 
 #endif // VISUALWAVE_H
