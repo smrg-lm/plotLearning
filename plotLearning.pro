@@ -18,25 +18,25 @@ SOURCES += main.cpp\
     plotwidget.cpp \
     plotview.cpp \
     scrollview.cpp \
-    abstractview.cpp \
     rulearea.cpp \
     visualgroup.cpp \
     visualelement.cpp \
     visualwave.cpp \
     visualbrickwall.cpp \
     brickwalllayout.cpp \
-    visualcontrolpoint.cpp
+    visualcontrolpoint.cpp \
+    baseview.cpp
 
 HEADERS  += \
     workarea.h \
     plotwidget.h \
     plotview.h \
     scrollview.h \
-    abstractview.h \
     rulearea.h \
     visualgroup.h \
     visualelement.h \
     visualwave.h \
     visualbrickwall.h \
     brickwalllayout.h \
-    visualcontrolpoint.h
+    visualcontrolpoint.h \
+    baseview.h

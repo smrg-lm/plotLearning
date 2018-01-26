@@ -1,7 +1,7 @@
 #ifndef PLOTVIEW_H
 #define PLOTVIEW_H
 
-#include "abstractview.h"
+#include "baseview.h"
 
 class WorkArea;
 

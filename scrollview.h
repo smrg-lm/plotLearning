@@ -1,7 +1,7 @@
 #ifndef SCROLLVIEW_H
 #define SCROLLVIEW_H
 
-#include "abstractview.h"
+#include "baseview.h"
 
 class RuleArea;
 

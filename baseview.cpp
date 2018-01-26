@@ -1,4 +1,4 @@
-#include "abstractview.h"
+#include "baseview.h"
 
 #include <QResizeEvent>
 #include <QScrollBar>
