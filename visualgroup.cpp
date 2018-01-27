@@ -51,9 +51,29 @@ void VisualGroup::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     painter->drawRect(_boundingRect);
 }
 
+QGraphicsView *VisualGroup::getCurrentActiveView() const
+{
+    QList<QGraphicsView*> views = this->scene()->views();
+
+    for(int i = 0; i < views.size(); i++) {
+        if(views[i]->hasFocus()) return views[i];
+        // scrollviews *must* be sibilings of the view
+        QObjectList sibilings = views[i]->parentWidget()->children();
+        for(int j = 0; j < sibilings.size(); j++) {
+            QWidget *child = dynamic_cast<QWidget*>(sibilings[j]);
+            qDebug() << "Child[j]: " << child << j;
+            if(child && child->hasFocus()) return views[i];
+        }
+    }
+
+    return 0;
+}
+
 QRectF VisualGroup::visibleRect() const
 {
-    QGraphicsView *view = this->scene()->views()[0]; // solo una! check nil (es para redo)
+    QGraphicsView *view = this->getCurrentActiveView();
+    if(!view) return QRectF();
+
     QPointF viewSize(
                 view->viewport()->size().width(),
                 view->viewport()->size().height());
@@ -69,7 +89,7 @@ QRectF VisualGroup::visibleRect() const
 
 void VisualGroup::clipPosToParent()
 {
-    VisualGroup *parent = static_cast<VisualGroup*>(this->parentItem());
+    QGraphicsItem *parent = this->parentItem();
     if(parent == 0) return;
 
     QPointF pos = this->pos();
@@ -89,24 +109,6 @@ void VisualGroup::clipPosToParent()
         newPos.setY(parent->boundingRect().height() - _boundingRect.height());
 
     this->setPos(newPos);
-}
-
-QGraphicsView *VisualGroup::getCurrentActiveView()
-{
-    QList<QGraphicsView*> views = this->scene()->views();
-
-    for(int i = 0; i < views.size(); i++) {
-        if(views[i]->hasFocus()) return views[i];
-        // scrollviews *must* be sibilings of the view
-        QObjectList sibilings = views[i]->parentWidget()->children();
-        for(int j = 0; j < sibilings.size(); j++) {
-            QWidget *child = dynamic_cast<QWidget*>(sibilings[j]);
-            qDebug() << "Child[j]: " << child << j;
-            if(child && child->hasFocus()) return views[i];
-        }
-    }
-
-    return 0;
 }
 
 void VisualGroup::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)

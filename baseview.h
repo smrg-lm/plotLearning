@@ -3,8 +3,6 @@
 
 #include <QGraphicsView>
 
-// algún método debería ser pure abstract...
-// por ahora es simplemente base class
 class BaseView : public QGraphicsView
 {
     Q_OBJECT

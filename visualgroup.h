@@ -22,10 +22,10 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0) override;
 
-    QRectF visibleRect() const; // redo, usa view
-    void clipPosToParent(); // qué hacer cuando el sub-elemento es más grande que parent
+    QGraphicsView *getCurrentActiveView() const;
+    QRectF visibleRect() const;
 
-    QGraphicsView *getCurrentActiveView();
+    void clipPosToParent(); // qué hacer cuando el sub-elemento es más grande que parent
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;

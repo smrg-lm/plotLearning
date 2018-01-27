@@ -41,6 +41,12 @@ private:
 #endif // VISUALWAVE_H
 
 /*
+ * Possible graphical horizontal unit:
+ * Math.pow(2, -32) == 2.3283064365386963e-10
+ * with qreal as double, but not sure,
+ * at all (INT_MAX is a problem), cambiar
+ * qslider puede ser mejor solución
+ *
  * Add edit mode:
  * By sample (with tooltip) vs drawing
  *
