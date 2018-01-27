@@ -50,10 +50,10 @@ void VisualElement::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     painter->drawRect(_boundingRect);
 }
 
-void VisualElement::clipPosToParent()
+void VisualElement::clipPosToParent() // sync!!! tengo que unificarlas
 {
-    VisualGroup *parent = static_cast<VisualGroup*>(this->parentItem());
-    if(parent == 0) return;
+    QGraphicsItem *parent = this->parentItem();
+    if(!parent) return;
 
     QPointF pos = this->pos();
     QPointF newPos;
@@ -62,9 +62,13 @@ void VisualElement::clipPosToParent()
         newPos.setX(pos.x());
     if(!(pos.y() < 0))
         newPos.setY(pos.y());
-    if(pos.x() + _boundingRect.width() > parent->boundingRect().width())
+
+    if(_boundingRect.width() <= parent->boundingRect().width() &&
+            pos.x() + _boundingRect.width() > parent->boundingRect().width())
         newPos.setX(parent->boundingRect().width() - _boundingRect.width());
-    if(pos.y() + _boundingRect.height() > parent->boundingRect().height())
+
+    if(_boundingRect.height() <= parent->boundingRect().height() &&
+            pos.y() + _boundingRect.height() > parent->boundingRect().height())
         newPos.setY(parent->boundingRect().height() - _boundingRect.height());
 
     this->setPos(newPos);
@@ -94,7 +98,5 @@ void VisualElement::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void VisualElement::wheelEvent(QGraphicsSceneWheelEvent *event)
 {
-    qDebug() << "VisualElement wheelEvent";
-    event->ignore(); // para zoom con wheel en av
     QGraphicsItem::wheelEvent(event);
 }

@@ -45,7 +45,16 @@ private:
  * Math.pow(2, -32) == 2.3283064365386963e-10
  * with qreal as double, but not sure,
  * at all (INT_MAX is a problem), cambiar
- * qslider puede ser mejor solución
+ * qslider puede ser mejor solución.
+ * PERO: si la unidad es el segundo hay
+ * 32767 / 60 ^ 2 ~ 9.1 horas independientemente
+ * de la frecuencia de muestreo.
+ *
+ * El rango vertical se tiene que poder escalar
+ * para igualar distintos rangos de datos, tal
+ * vez, llegado el caso, se puede hacer lo mismo
+ * con la escala temporal, pero no sería necesario
+ * por ahora.
  *
  * Add edit mode:
  * By sample (with tooltip) vs drawing

@@ -6,6 +6,7 @@
 #include "visualgroup.h"
 #include "visualelement.h"
 #include "visualwave.h"
+#include "visualbrickwall.h"
 #include <QDebug>
 
 WorkArea::WorkArea(QGraphicsItem *parent)
@@ -14,21 +15,13 @@ WorkArea::WorkArea(QGraphicsItem *parent)
     this->setSize(QSizeF(500, 500)); // TEST
     this->setFlag(QGraphicsItem::ItemIsMovable, false); // no se puede mover o hay que sincronizar con sceneRect
 
-    VisualGroup *vg = new VisualGroup(this, QPointF(0, 0), QSizeF(200, 100));
-    new VisualElement(vg, QPointF(0, 0), QSizeF(25, 25));
-    new VisualElement(vg, QPointF(25, 25), QSizeF(25, 25));
-    new VisualElement(vg, QPointF(50, 50), QSizeF(25, 25));
-    new VisualElement(vg, QPointF(75, 75), QSizeF(25, 25));
-
-    qDebug() << "children: " << this->childItems();
-    qDebug() << "children: " << vg->childItems();
-    qDebug() << "vg visible: " << vg->isVisible();
-
-    for(int i = 0; i < 25; i++) { // excede apropósito
-        mList.append(new VisualElement(this, QPoint(i * 25, i * 25), QSize(25, 25)));
-    }
-
+    // TEST
     new VisualWave(this, QPointF(0, 0), QSizeF(300, 300));
+
+    VisualBrickWall *brickWall = new VisualBrickWall(this, 100, 5); // default dur 30
+    for(int i = 0; i < 10; i++) {
+        new VisualBrick(brickWall, QPoint(i * 2, i * 5), QSize(2, 5));
+    }
 }
 
 void WorkArea::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,

@@ -19,7 +19,7 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0) override;
 
-    void clipPosToParent(); // no sync con vg
+    void clipPosToParent(); // sync!!!
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;

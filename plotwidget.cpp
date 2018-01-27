@@ -54,8 +54,4 @@ PlotWidget::PlotWidget(QWidget *parent)
             _verticalScrollView, SLOT(updateScale(qreal,qreal)));
     connect(_verticalScrollView, SIGNAL(scaleChanged(qreal,qreal)),
             _plot, SLOT(updateScale(qreal,qreal)));
-
-    qDebug() << "sizeHint: " << _plot->sizeHint();
-    qDebug() << "sizeHint: " << _horizontalScrollView->sizeHint();
-    qDebug() << "sizeHint: " << _verticalScrollView->sizeHint();
 }

@@ -31,7 +31,7 @@ void BaseView::resizeEvent(QResizeEvent *event) // TEST
 
 void BaseView::wheelEvent(QWheelEvent *event)
 {
-    qDebug() << "AbstractView wheelEvent: " << event;
+    qDebug() << "BaseView wheelEvent: " << event;
 
     bool shift = event->modifiers() & Qt::ShiftModifier;
     bool ctrl = event->modifiers() & Qt::ControlModifier;

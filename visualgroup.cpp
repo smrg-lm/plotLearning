@@ -87,10 +87,10 @@ QRectF VisualGroup::visibleRect() const
     return _boundingRect.intersected(QRectF(tl, br));
 }
 
-void VisualGroup::clipPosToParent()
+void VisualGroup::clipPosToParent() // sync!!! tengo que unificarlas
 {
     QGraphicsItem *parent = this->parentItem();
-    if(parent == 0) return;
+    if(!parent) return;
 
     QPointF pos = this->pos();
     QPointF newPos;
@@ -119,7 +119,6 @@ void VisualGroup::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 void VisualGroup::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsObject::mousePressEvent(event);
-    qDebug() << "visibleRect: " << this->visibleRect();
 }
 
 void VisualGroup::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -135,7 +134,5 @@ void VisualGroup::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void VisualGroup::wheelEvent(QGraphicsSceneWheelEvent *event)
 {
-    qDebug() << "VisualGroup wheelEvent";
-    event->ignore(); // para zoom con wheel en av, pero no pasa por acá, algo entiendo mal
     QGraphicsObject::wheelEvent(event);
 }

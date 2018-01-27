@@ -25,7 +25,7 @@ public:
     QGraphicsView *getCurrentActiveView() const;
     QRectF visibleRect() const;
 
-    void clipPosToParent(); // qué hacer cuando el sub-elemento es más grande que parent
+    void clipPosToParent(); // sync!!! // qué hacer cuando el sub-elemento es más grande que parent
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;

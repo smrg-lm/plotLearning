@@ -56,7 +56,5 @@ void PlotView::mouseReleaseEvent(QMouseEvent *event)
 
 void PlotView::wheelEvent(QWheelEvent *event)
 {
-    qDebug() << "PlotView wheelEvent";
-    event->ignore();
     BaseView::wheelEvent(event);
 }
