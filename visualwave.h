@@ -16,13 +16,14 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0) override;
 
+    void readSoundFile(); // All in one similar to Buffer.read, interface is not defined yet
+
     qreal sampleRate() { return _sampleRate; }
     void setSampleRate(qreal value) {
         _sampleRate = value;
         _graphicUnit = 1. / _sampleRate;
     }
     qreal graphicUnit() { return _graphicUnit; }
-    unsigned long bufferSize() { return _bufferSize; }
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
@@ -37,9 +38,8 @@ private:
     int obtainPointNumber(const QPointF &point);
     void editPoint(const QPointF &point);
 
-    QList<qreal> fakeData;
-
     QGraphicsPathItem waveShapeItem;
+    //QGraphicsPathItem wavePeaksItem;
     QGraphicsPathItem controlPointsItem;
     qreal controlPointLOD = 6; // is more hirizontal than vertical
     qreal controlPointRadio = 5;
@@ -49,9 +49,23 @@ private:
     int visualStartPos = 0;
     int visualEndPos = 0;
 
+    // this could be another class for composition
+    int bufferSize() { return _bufferFrameSize; } // in memory buffer
+    void setBufferSize(int value) { _bufferFrameSize = value; } // TEST no memory management
+    unsigned long fileFrameSize() { return _fileFrameSize; }
+    //QList<qreal>??(void) readFromDisk(); // params, fills in memory buffer
+
+    QList<qreal> fakeDiskAudioData; // TEST
+    unsigned long _fileFrameSize = 0;
+
+    QList<qreal> bufferedData;
+    int _bufferFrameSize = 512;
+
+    //QList<qreal> bufferedPeaksData;
+    //int peaksFrameSize;
+
     qreal _sampleRate = 48000;
-    qreal _graphicUnit = 1. / _sampleRate;
-    unsigned long _bufferSize = 0;
+    qreal _graphicUnit = 1. / _sampleRate; // can't be zero, by now
 };
 
 #endif // VISUALWAVE_H

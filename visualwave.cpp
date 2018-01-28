@@ -14,13 +14,7 @@
 VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size)
     : VisualGroup(parent, pos, size)
 {
-    std::random_device rd;
-    std::mt19937 e2(rd());
-    std::uniform_real_distribution<> dist(-1, 1);
-
-    for(int i = 0; i < this->size().width(); i++) {
-        fakeData.append(dist(e2));
-    }
+    this->readSoundFile(); // TEST
 
     // QGraphicsPathItem (QPainterPath)
     QPen pen; pen.setWidth(0);
@@ -46,6 +40,30 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     // tal ve hay que usar QGraphicsItem::deviceTransform (ver doc)
     qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
     this->updatePathItems(lod); // confirmar que actualiza correctamente
+}
+
+void VisualWave::readSoundFile()
+{
+    std::random_device rd;
+    std::mt19937 e2(rd());
+    std::uniform_real_distribution<> dist(-1, 1);
+    int sr = 48000;
+    _fileFrameSize = sr * 60 * 2; // 10'? ver QList index size (it would also need peak data
+    for(unsigned long i = 0; i < _fileFrameSize; i++)
+        fakeDiskAudioData.append(dist(e2));
+
+    //bufferedPeaksData;
+    //peaksFrameSize
+
+    // TEST
+    bufferedData = fakeDiskAudioData;
+    this->setBufferSize(_fileFrameSize);
+
+    this->setSampleRate(sr);
+
+    // HAY QUE SETEAR EL TAMAÑO DEL WIDGET PARA QUE NO SE ROMPA
+    // PERO ESO ES LO QUE VA A CAMBIAR AHORA LUEGO.
+    // QList<qreal>??(void) readFromDisk(); // params, fills in memory buffer
 }
 
 void VisualWave::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -124,17 +142,16 @@ void VisualWave::updatePathItems(const qreal &lod)
     // no está activa para que se pueda ver cuando la ventana
     // no está en foco, o ver si se puede cambiar la implementación.
     QRectF vr = this->visibleRect();
-    visualStartPos = (int)round(vr.left());
-    visualEndPos = visualStartPos + (int)round(vr.width());
-    // ^^^^^^^^^ en algún caso, tal vez zoom extremo, se va de rango
-    // -> ASSERT failure in QList<T>::operator[]: "index out of range"
+    visualStartPos = (int)std::floor(vr.left());
+    visualEndPos = visualStartPos + (int)std::floor(vr.width());
+    qDebug() << "visual start: " << visualStartPos << "visual end: " << visualEndPos;
 
     QPainterPath wavePath;
     QPainterPath controlsPath;
 
     // waveShapeItem
     qreal x = visualStartPos;
-    qreal y = this->linlin(fakeData[visualStartPos], -1, 1, 0, this->boundingRect().height());
+    qreal y = this->linlin(bufferedData[visualStartPos], -1, 1, 0, this->boundingRect().height());
     wavePath.moveTo(x, y);
 
     // controlPointsItem
@@ -149,7 +166,7 @@ void VisualWave::updatePathItems(const qreal &lod)
     // both
     for(int i = visualStartPos + 1; i < visualEndPos; i++) {
         x = i;
-        y = this->linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
+        y = this->linlin(bufferedData[i], -1, 1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
         if(lod > controlPointLOD) {
             controlsPath.addEllipse(QPointF(x, y),
@@ -183,6 +200,6 @@ void VisualWave::editPoint(const QPointF &point)
     if(newValue > 1) newValue = 1; if(newValue < -1) newValue = -1;
     // this needs some kind of range and resolution control
     // and enable tooltip showing values in rt
-    fakeData[visualStartPos + selectedPointNumber] = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
+    bufferedData[visualStartPos + selectedPointNumber] = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
     this->update();
 }
