@@ -23,7 +23,6 @@ SOURCES += main.cpp\
     visualelement.cpp \
     visualwave.cpp \
     visualbrickwall.cpp \
-    brickwalllayout.cpp \
     visualcontrolpoint.cpp \
     baseview.cpp
 
@@ -37,6 +36,5 @@ HEADERS  += \
     visualelement.h \
     visualwave.h \
     visualbrickwall.h \
-    brickwalllayout.h \
     visualcontrolpoint.h \
     baseview.h
