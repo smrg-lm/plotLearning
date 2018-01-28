@@ -58,8 +58,7 @@ void VisualWave::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if(controlPointsItem.contains(event->pos())) {
         selectedPointNumber = this->obtainPointNumber(event->pos());
         qDebug() << "selectePointNumber: " << selectedPointNumber;
-        if(selectedPointNumber > 0) pointSelected = true;
-        //event->accept(); // por defecto acepta
+        if(selectedPointNumber >= 0) pointSelected = true;
     } else {
         VisualGroup::mousePressEvent(event); // se necesita para itemmove en los tres handlers
     }
@@ -90,9 +89,41 @@ qreal VisualWave::linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qr
     return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
 }
 
+QSizeF VisualWave::calculateUntrasnformedFactorSize(const QSizeF &size) const
+{
+    // counter transform por point size without translantion
+    // (QTransform::map documentation)
+    QGraphicsView *view = this->getCurrentActiveView();
+    qreal psX, psY;
+
+    if(view) {
+        QTransform t;
+        qreal ox, oy;
+
+        t = this->deviceTransform(view->viewportTransform()).inverted();
+        ox = size.width();
+        oy = size.height();
+
+        psX = t.m11() * ox + t.m21() * oy;
+        psY = t.m22() * oy + t.m12() * ox;
+        if(!t.isAffine()) {
+            qreal wp = t.m13() * ox + t.m23() * oy + t.m33();
+            psX /= wp;
+            psY /= wp;
+        }
+
+        return QSizeF(psX, psY);
+    } else {
+        return QSizeF();
+    }
+}
+
 void VisualWave::updatePathItems(const qreal &lod)
 {
-    QRectF vr = this->visibleRect(); // se necesitaría mantener la última para cuando la vista no está activa, o ver si se puede cambiar la implementación
+    // se necesitaría mantener la última para cuando la vista
+    // no está activa para que se pueda ver cuando la ventana
+    // no está en foco, o ver si se puede cambiar la implementación.
+    QRectF vr = this->visibleRect();
     visualStartPos = (int)round(vr.left());
     visualEndPos = visualStartPos + (int)round(vr.width());
     // ^^^^^^^^^ en algún caso, tal vez zoom extremo, se va de rango
@@ -107,27 +138,12 @@ void VisualWave::updatePathItems(const qreal &lod)
     wavePath.moveTo(x, y);
 
     // controlPointsItem
-    qreal minLod = 6;
-    qreal pointSizeX, pointSizeY;
-    if(lod > minLod) {
-        // counter transform por point size (QTransform::map documentation)
-        QGraphicsView *view = this->getCurrentActiveView();
-        if(!(view == 0)) {
-            QTransform t;
-            qreal ox, oy;
-
-            t = this->deviceTransform(view->viewportTransform()).inverted();
-            ox = oy = controlPointRadio; //controlPointRadio is untransformed
-
-            pointSizeX = t.m11() * ox + t.m21() * oy;
-            pointSizeY = t.m22() * oy + t.m12() * ox;
-            if(!t.isAffine()) {
-                qreal wp = t.m13() * ox + t.m23() * y + t.m33();
-                pointSizeX /= wp;
-                pointSizeY /= wp;
-            }
-        }
-        controlsPath.addEllipse(QPointF(x, y), pointSizeX, pointSizeY);
+    QSizeF controlPointSize(
+                this->calculateUntrasnformedFactorSize(QSize(controlPointRadio, controlPointRadio)));
+    if(lod > controlPointLOD) {
+        controlsPath.addEllipse(QPointF(x, y),
+                                controlPointSize.width(),
+                                controlPointSize.height());
     }
 
     // both
@@ -135,7 +151,11 @@ void VisualWave::updatePathItems(const qreal &lod)
         x = i;
         y = this->linlin(fakeData[i], -1, 1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
-        if(lod > minLod) controlsPath.addEllipse(QPointF(x, y), pointSizeX, pointSizeY);
+        if(lod > controlPointLOD) {
+            controlsPath.addEllipse(QPointF(x, y),
+                                    controlPointSize.width(),
+                                    controlPointSize.height());
+        }
     }
 
     waveShapeItem.setPath(wavePath);

@@ -32,13 +32,16 @@ protected:
 
 private:
     qreal linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax);
+    QSizeF calculateUntrasnformedFactorSize(const QSizeF &size) const;
     void updatePathItems(const qreal &lod);
     int obtainPointNumber(const QPointF &point);
     void editPoint(const QPointF &point);
 
     QList<qreal> fakeData;
+
     QGraphicsPathItem waveShapeItem;
     QGraphicsPathItem controlPointsItem;
+    qreal controlPointLOD = 6; // is more hirizontal than vertical
     qreal controlPointRadio = 5;
     bool pointSelected = false;
     int selectedPointNumber = -1;
