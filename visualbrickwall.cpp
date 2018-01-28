@@ -6,8 +6,6 @@
 
 // *** Brick ***
 
-//void VisualBrick::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) { VisualElement::mouseDoubleClickEvent(event); }
-
 void VisualBrick::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     QPointF pos = this->mapToParent(event->pos());
@@ -17,19 +15,9 @@ void VisualBrick::mousePressEvent(QGraphicsSceneMouseEvent *event)
     VisualBrickWall *parent = static_cast<VisualBrickWall*>(this->parentItem());
     if(!parent) return;
 
-    // rehacer en parent?
-    qreal rx, ry;
-    if(parent->timeQuant() > 0)
-        rx = parent->horizontalSnap(pos.x());
-    else
-        rx = pos.x();
-    if(parent->resolution() > 0)
-        ry = parent->verticalSnap(pos.y());
-    else
-        ry = pos.y();
-
-    mouseDragStartRect = QRectF(rx, ry, parent->timeQuant(), parent->resolution());
-    mouseDragOffset = QPointF(rx - this->pos().x(), ry - this->pos().y());
+    QPointF rp = parent->snapPoint(pos);
+    mouseDragStartRect = QRectF(rp.x(), rp.y(), parent->timeQuant(), parent->resolution());
+    mouseDragOffset = rp - this->pos();
 }
 
 void VisualBrick::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -40,32 +28,14 @@ void VisualBrick::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         VisualBrickWall *parent = static_cast<VisualBrickWall*>(this->parentItem());
         if(!parent) return;
 
-        qreal x = parent->horizontalSnap(pos.x() - mouseDragOffset.x());
-        qreal y = parent->verticalSnap(pos.y() - mouseDragOffset.y());
-
-        this->setPos(x, y);
+        this->setPos(parent->snapPoint(pos - mouseDragOffset));
         this->clipPosToParent();
-        _start = x; // QGraphicsItem::data?
+        _start = this->x(); // QGraphicsItem::data?
 
-        // IDEM TEST
-        qreal rx, ry;
-        if(parent->timeQuant() > 0)
-            rx = parent->horizontalSnap(pos.x());
-        else
-            rx = pos.x();
-        if(parent->resolution() > 0)
-            ry = parent->verticalSnap(pos.y());
-        else
-            ry = pos.y();
-
-        mouseDragStartRect = QRectF(rx, ry, parent->timeQuant(), parent->resolution());
-
-        qDebug() << "drag start rect: " << mouseDragStartRect;
-        qDebug() << "drag offset: " << mouseDragOffset;
+        QPointF rp = parent->snapPoint(pos);
+        mouseDragStartRect = QRectF(rp.x(), rp.y(), parent->timeQuant(), parent->resolution());
     }
 }
-
-//void VisualBrick::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) { VisualElement::mouseReleaseEvent(event); }
 
 
 // *** Wall ***
@@ -155,4 +125,21 @@ qreal VisualBrickWall::horizontalSnap(qreal value)
 {
     //return this->sc_round(value, _timeQuant);
     return this->snapFloor(value, _timeQuant);
+}
+
+QPointF VisualBrickWall::snapPoint(const QPointF &point)
+{
+    QPointF rp;
+
+    if(this->timeQuant() > 0)
+        rp.setX(this->horizontalSnap(point.x()));
+    else
+        rp.setX(point.x());
+
+    if(this->resolution() > 0)
+        rp.setY(this->verticalSnap(point.y()));
+    else
+        rp.setY(point.y());
+
+    return rp;
 }

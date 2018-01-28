@@ -9,13 +9,10 @@ class VisualBrick : public VisualElement
 public:
     using VisualElement::VisualElement;
 
-    //void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
-    //void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
-    // pueden ser el mismo valor que x/y?
     qreal _value; // QGraphicsItem::data?
     qreal _start; // QGraphicsItem::data? if start is pos().x()
     qreal _dur; // QGraphicsItem::data? if dur is size().x()
@@ -48,6 +45,7 @@ public:
     qreal snapFloor(qreal value, qreal quant);
     qreal verticalSnap(qreal value);
     qreal horizontalSnap(qreal value);
+    QPointF snapPoint(const QPointF &point);
 
 private:
     qreal _range = -1; // abs: 0..inf
