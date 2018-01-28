@@ -16,6 +16,14 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0) override;
 
+    qreal sampleRate() { return _sampleRate; }
+    void setSampleRate(qreal value) {
+        _sampleRate = value;
+        _graphicUnit = 1. / _sampleRate;
+    }
+    qreal graphicUnit() { return _graphicUnit; }
+    unsigned long bufferSize() { return _bufferSize; }
+
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
@@ -34,8 +42,13 @@ private:
     qreal controlPointRadio = 5;
     bool pointSelected = false;
     int selectedPointNumber = -1;
+
     int visualStartPos = 0;
     int visualEndPos = 0;
+
+    qreal _sampleRate = 48000;
+    qreal _graphicUnit = 1. / _sampleRate;
+    unsigned long _bufferSize = 0;
 };
 
 #endif // VISUALWAVE_H

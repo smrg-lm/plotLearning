@@ -92,7 +92,7 @@ qreal VisualWave::linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qr
 
 void VisualWave::updatePathItems(const qreal &lod)
 {
-    QRectF vr = this->visibleRect();
+    QRectF vr = this->visibleRect(); // se necesitaría mantener la última para cuando la vista no está activa, o ver si se puede cambiar la implementación
     visualStartPos = (int)round(vr.left());
     visualEndPos = visualStartPos + (int)round(vr.width());
     // ^^^^^^^^^ en algún caso, tal vez zoom extremo, se va de rango
