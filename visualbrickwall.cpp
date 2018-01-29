@@ -111,7 +111,7 @@ qreal VisualBrickWall::snapRound(qreal value, qreal quant)
 
 qreal VisualBrickWall::snapFloor(qreal value, qreal quant)
 {
-    // may not be exactly sc_floor
+    // ahora es VisualGroup::floorQuant, cambiar
     return quant == 0. ? value : std::floor(value / quant) * quant;
 }
 

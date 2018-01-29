@@ -11,8 +11,12 @@
 #include <QDebug>
 
 
-VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size)
-    : VisualGroup(parent, pos, size)
+VisualWave::VisualWave(QGraphicsItem *parent)
+    : VisualGroup(parent, QPointF(), QSizeF())
+{}
+
+VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos)
+    : VisualGroup(parent, pos, QSizeF())
 {
     this->readSoundFile(); // TEST
 
@@ -47,8 +51,12 @@ void VisualWave::readSoundFile()
     std::random_device rd;
     std::mt19937 e2(rd());
     std::uniform_real_distribution<> dist(-1, 1);
-    int sr = 48000;
-    _fileFrameSize = sr * 60 * 2; // 10'? ver QList index size (it would also need peak data
+    // dibujar 48000 puntos en los paths no computa
+    // tal vez si el path mayor se calcula una vez,
+    // anda rápido, pero tampoco daría para todo el
+    // archivo porque se multiplica la memoria
+    int sr = 512; //48000;
+    _fileFrameSize = sr; // * 60 * 2; // 10'? ver QList index size (it would also need peak data
     for(unsigned long i = 0; i < _fileFrameSize; i++)
         fakeDiskAudioData.append(dist(e2));
 
@@ -60,10 +68,7 @@ void VisualWave::readSoundFile()
     this->setBufferSize(_fileFrameSize);
 
     this->setSampleRate(sr);
-
-    // HAY QUE SETEAR EL TAMAÑO DEL WIDGET PARA QUE NO SE ROMPA
-    // PERO ESO ES LO QUE VA A CAMBIAR AHORA LUEGO.
-    // QList<qreal>??(void) readFromDisk(); // params, fills in memory buffer
+    this->setSize(QSizeF(_fileFrameSize * this->graphicUnit(), 2));
 }
 
 void VisualWave::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -142,16 +147,20 @@ void VisualWave::updatePathItems(const qreal &lod)
     // no está activa para que se pueda ver cuando la ventana
     // no está en foco, o ver si se puede cambiar la implementación.
     QRectF vr = this->visibleRect();
-    visualStartPos = (int)std::floor(vr.left());
-    visualEndPos = visualStartPos + (int)std::floor(vr.width());
-    qDebug() << "visual start: " << visualStartPos << "visual end: " << visualEndPos;
+    qreal visualStartPos = this->floorQuant(vr.left(), _graphicUnit); // esto puede quedar afuera de lo visual, pero no es <0
+    qreal visualEndPos = visualStartPos + this->floorQuant(vr.width(), _graphicUnit);
+    unsigned long startPos = (unsigned long)(visualStartPos / _graphicUnit); // aunque no debería poder ser ulong
+    unsigned long endPos = (unsigned long)(visualEndPos / _graphicUnit);
 
-    QPainterPath wavePath;
+    qDebug() << "visual start: " << visualStartPos << "visual end: " << visualEndPos;
+    qDebug() << "start pos: " << startPos << "end pos: " << endPos;
+
+    QPainterPath wavePath; // esto debería actualizar solo si es necesario
     QPainterPath controlsPath;
 
     // waveShapeItem
     qreal x = visualStartPos;
-    qreal y = this->linlin(bufferedData[visualStartPos], -1, 1, 0, this->boundingRect().height());
+    qreal y = this->linlin(bufferedData[startPos], -1, 1, 0, this->boundingRect().height());
     wavePath.moveTo(x, y);
 
     // controlPointsItem
@@ -164,8 +173,8 @@ void VisualWave::updatePathItems(const qreal &lod)
     }
 
     // both
-    for(int i = visualStartPos + 1; i < visualEndPos; i++) {
-        x = i;
+    for(unsigned long i = startPos + 1; i < endPos; i++) {
+        x = i * _graphicUnit;
         y = this->linlin(bufferedData[i], -1, 1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
         if(lod > controlPointLOD) {
@@ -177,6 +186,7 @@ void VisualWave::updatePathItems(const qreal &lod)
 
     waveShapeItem.setPath(wavePath);
     controlPointsItem.setPath(controlsPath);
+    lastUpdateStartPos = startPos;
 }
 
 int VisualWave::obtainPointNumber(const QPointF &point)
@@ -200,6 +210,6 @@ void VisualWave::editPoint(const QPointF &point)
     if(newValue > 1) newValue = 1; if(newValue < -1) newValue = -1;
     // this needs some kind of range and resolution control
     // and enable tooltip showing values in rt
-    bufferedData[visualStartPos + selectedPointNumber] = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
+    bufferedData[lastUpdateStartPos + selectedPointNumber] = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
     this->update();
 }

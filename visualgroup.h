@@ -26,6 +26,7 @@ public:
     QRectF visibleRect() const;
 
     void clipPosToParent(); // sync!!! // qué hacer cuando el sub-elemento es más grande que parent
+    qreal floorQuant(qreal value, qreal quant);
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;

@@ -111,6 +111,12 @@ void VisualGroup::clipPosToParent() // sync!!! tengo que unificarlas
     this->setPos(newPos);
 }
 
+qreal VisualGroup::floorQuant(qreal value, qreal quant)
+{
+    // may not be exactly sc_floor
+    return quant == 0. ? value : std::floor(value / quant) * quant;
+}
+
 void VisualGroup::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsObject::mouseDoubleClickEvent(event);

@@ -16,7 +16,7 @@ WorkArea::WorkArea(QGraphicsItem *parent)
     this->setFlag(QGraphicsItem::ItemIsMovable, false); // no se puede mover o hay que sincronizar con sceneRect
 
     // TEST
-    new VisualWave(this, QPointF(0, 0), QSizeF(300, 300));
+    new VisualWave(this, QPointF(0, 0));
 
     VisualBrickWall *brickWall = new VisualBrickWall(this, 100, 5); // default dur 30
     for(int i = 0; i < 10; i++) {

@@ -10,8 +10,11 @@ class VisualWave : public VisualGroup
     Q_OBJECT
 
 public:
-    VisualWave(QGraphicsItem *parent, const QPointF &pos, const QSizeF &size);
-    using VisualGroup::VisualGroup;
+    // size no es virtual, boundingRect es la variable virtual
+    // por ahora size depende de _fileFrameSize para width
+    // y 2 (rango bipolar) para height y se escala/transforma.
+    VisualWave(QGraphicsItem *parent);
+    VisualWave(QGraphicsItem *parent, const QPointF &pos);
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0) override;
@@ -41,13 +44,11 @@ private:
     QGraphicsPathItem waveShapeItem;
     //QGraphicsPathItem wavePeaksItem;
     QGraphicsPathItem controlPointsItem;
-    qreal controlPointLOD = 6; // is more hirizontal than vertical
+    qreal controlPointLOD = 1800; //6; // is more hirizontal than vertical
     qreal controlPointRadio = 5;
     bool pointSelected = false;
     int selectedPointNumber = -1;
-
-    int visualStartPos = 0;
-    int visualEndPos = 0;
+    unsigned long lastUpdateStartPos;
 
     // this could be another class for composition
     int bufferSize() { return _bufferFrameSize; } // in memory buffer
