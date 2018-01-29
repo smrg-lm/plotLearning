@@ -5,6 +5,7 @@
 
 class ControlPoint;
 
+// VisualSignal?
 class VisualWave : public VisualGroup
 {
     Q_OBJECT
@@ -51,19 +52,21 @@ private:
     unsigned long lastUpdateStartPos;
 
     // this could be another class for composition
+    unsigned long fileFrameSize() { return _fileFrameSize; }
+    unsigned long peaksFrameSize() { return _peaksFrameSize; }
     int bufferSize() { return _bufferFrameSize; } // in memory buffer
     void setBufferSize(int value) { _bufferFrameSize = value; } // TEST no memory management
-    unsigned long fileFrameSize() { return _fileFrameSize; }
     //QList<qreal>??(void) readFromDisk(); // params, fills in memory buffer
 
     QList<qreal> fakeDiskAudioData; // TEST
     unsigned long _fileFrameSize = 0;
 
+    QList<qreal> fakeDiskPeakData; // TEST
+    QList<qreal> bufferedPeaksData;
+    unsigned long _peaksFrameSize;
+
     QList<qreal> bufferedData;
     int _bufferFrameSize = 512;
-
-    //QList<qreal> bufferedPeaksData;
-    //int peaksFrameSize;
 
     qreal _sampleRate = 48000;
     qreal _graphicUnit = 1. / _sampleRate; // can't be zero, by now
@@ -96,6 +99,9 @@ private:
  * plines (points an lines)
  * levels (just the level line by sample not bars
  * steps
+ *
+ * Múltiples señales en un mismo cajón se usa para
+ * la visualización del tracking de armónicos
  *
  * Plotter also have resolution as visual sr
  * however it doesn't prevent visual aliasing

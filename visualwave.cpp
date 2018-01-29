@@ -43,6 +43,10 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     // pero lod no indica diferencia h/v
     // tal ve hay que usar QGraphicsItem::deviceTransform (ver doc)
     qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
+
+    // no se puede llamar este update cada vez que actualiza
+    // la vista por cualquier razón, no parece correcto, hay
+    // que actualizar los path cuando sea necesario
     this->updatePathItems(lod); // confirmar que actualiza correctamente
 }
 
@@ -51,24 +55,36 @@ void VisualWave::readSoundFile()
     std::random_device rd;
     std::mt19937 e2(rd());
     std::uniform_real_distribution<> dist(-1, 1);
-    // dibujar 48000 puntos en los paths no computa
-    // tal vez si el path mayor se calcula una vez,
-    // anda rápido, pero tampoco daría para todo el
-    // archivo porque se multiplica la memoria
-    int sr = 512; //48000;
-    _fileFrameSize = sr; // * 60 * 2; // 10'? ver QList index size (it would also need peak data
+
+    // create fake file data (disk data)
+    int sr = 48000;
+    _fileFrameSize = sr; // * 60 * 2; // 10'? ver QList index size
     for(unsigned long i = 0; i < _fileFrameSize; i++)
         fakeDiskAudioData.append(dist(e2));
 
-    //bufferedPeaksData;
-    //peaksFrameSize
+    // create (fake) peak data (disk data)
+    int peakWindowSize = 64;
+    for(unsigned long i = 0; i < _fileFrameSize / peakWindowSize; i++) { // puede ignorar hasta las peakWindowSize-1 últimas muestras
+        qreal peak = 0;
+        for(int j = 0; j < peakWindowSize; j++) {
+            if(std::fabs(fakeDiskAudioData[i+j]) > std::fabs(peak))
+                peak = fakeDiskAudioData[i+j];
+        }
+        fakeDiskPeakData.append(peak); // parece que repite el mismo valor en ventanas consecutivas?
+    }
+    _peaksFrameSize = fakeDiskPeakData.size();
 
     // TEST
-    bufferedData = fakeDiskAudioData;
-    this->setBufferSize(_fileFrameSize);
-
+    bufferedData = fakeDiskPeakData;
+    this->setBufferSize(_peaksFrameSize);
     this->setSampleRate(sr);
-    this->setSize(QSizeF(_fileFrameSize * this->graphicUnit(), 2));
+    this->setSize(QSizeF(_peaksFrameSize * this->graphicUnit(), 2));
+
+    // TEST
+    //bufferedData = fakeDiskAudioData;
+    //this->setBufferSize(_fileFrameSize);
+    //this->setSampleRate(sr);
+    //this->setSize(QSizeF(_fileFrameSize * this->graphicUnit(), 2));
 }
 
 void VisualWave::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
