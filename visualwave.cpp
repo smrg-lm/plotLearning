@@ -42,12 +42,12 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 
     // pero lod no indica diferencia h/v
     // tal ve hay que usar QGraphicsItem::deviceTransform (ver doc)
-    qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
+    //qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
 
     // no se puede llamar este update cada vez que actualiza
     // la vista por cualquier razón, no parece correcto, hay
     // que actualizar los path cuando sea necesario
-    this->updatePathItems(lod); // confirmar que actualiza correctamente
+    this->updatePathItems(); //(lod); // confirmar que actualiza correctamente
 }
 
 void VisualWave::readSoundFile()
@@ -58,7 +58,7 @@ void VisualWave::readSoundFile()
 
     // create fake file data (disk data)
     int sr = 48000;
-    _fileFrameSize = sr; // * 60 * 2; // 10'? ver QList index size
+    _fileFrameSize = sr * 60 * 2; // 10'? ver QList index size
     for(unsigned long i = 0; i < _fileFrameSize; i++)
         fakeDiskAudioData.append(dist(e2));
 
@@ -74,15 +74,10 @@ void VisualWave::readSoundFile()
     }
     _peaksFrameSize = fakeDiskPeakData.size();
 
-    // TEST
-    //bufferedData = fakeDiskPeakData;
-    //this->setBufferSize(_peaksFrameSize);
-    //this->setSampleRate(sr);
-    //this->setSize(QSizeF(_peaksFrameSize * this->graphicUnit(), 2));
+    // init buffer data (precario, hay que calcular _bufferFrameSize)
+    for(int i = 0; i < _bufferFrameSize; i++)
+        bufferedData.append(0.0);
 
-    // TEST
-    bufferedData = fakeDiskAudioData;
-    this->setBufferSize(_fileFrameSize);
     this->setSampleRate(sr);
     this->setSize(QSizeF(_fileFrameSize * this->graphicUnit(), 2));
 }
@@ -157,10 +152,11 @@ QSizeF VisualWave::calculateUntrasnformedFactorSize(const QSizeF &size) const
     }
 }
 
-void VisualWave::updatePathItems(const qreal &lod)
+void VisualWave::updatePathItems()
 {
     // es mejor no mantener las vistas no activas así
     // el elemento se puede visualizar con distintas vistas
+    // usando los mismos recursos
 
     QRectF vr = this->visibleRect();
     qreal visualStartPos = this->floorQuant(vr.left(), _graphicUnit); // esto puede quedar afuera de lo visual, pero no es <0
@@ -168,44 +164,101 @@ void VisualWave::updatePathItems(const qreal &lod)
     unsigned long startPos = (unsigned long)(visualStartPos / _graphicUnit); // sí, puede ser ulong
     unsigned long endPos = (unsigned long)(visualEndPos / _graphicUnit);
 
-    // cargar los buffers según sea necesario
-
-    // if lod < tanto
-    this->updatePeaksPath(startPos, endPos); // todo
-    // else
     this->updateSignalPath(startPos, endPos);
-    if(lod > controlPointLOD)
-        this->updateControlPointsPath(startPos, endPos);
-    else
-        controlPointsItem.setPath(QPainterPath()); // clear...
+    // LOD es endPos - startPos
+    //this->updateControlPointsPath(startPos, endPos);
+    //controlPointsItem.setPath(QPainterPath()); // clear...
 
     lastUpdateStartPos = startPos;
 }
 
-void VisualWave::updateSignalPath(int sp, int ep) // no son unsigned long, bufferedData está pre-cargada
+void VisualWave::calcPeaks(unsigned long sp, unsigned long ep, unsigned long range) // y disk data ref
 {
+    // range *must be* >= _bufferFrameSize
+    unsigned long stepSize = range / _bufferFrameSize; // repite en llamadora
+    unsigned long resto = range % _bufferFrameSize;
+    qreal peak, data;
+
+    QList<qreal> diskData = fakeDiskAudioData; // TEST
+
+    qDebug() << "Welcome to Calc Peaks";
+
+    for(unsigned long i = 0; i < (unsigned long)_bufferFrameSize - 1; i++) { // el rango de i es int
+        peak = 0;
+        for(unsigned long j = 0; j < stepSize; j++) { // el rango de j es int
+            data = diskData[sp + (stepSize * i) + j];
+            if(std::fabs(data) > std::fabs(peak)) peak = data; // es ABS, pero no anda...
+        }
+        bufferedData[i] = peak;
+    }
+
+    qDebug() << "Before remainder";
+
+    // remainder
+    peak = 0;
+    for(unsigned long j = 0; j < resto; j++) {
+        data = diskData[ep - 1 - j]; // backwards from ep
+        if(data > peak) peak = data;
+    }
+    bufferedData[_bufferFrameSize - 1] = peak;
+}
+
+void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
+{
+    // data
+    unsigned long range = ep - sp; // ep - sp es range, es LOD
+
+    qDebug() << "range: " << range << "_bufferFrameSize: " << _bufferFrameSize;
+
+    /*
+     * Importante:
+     * - No actualiza nada, y queda el path anterior,
+     * si no cambia el rango visible/calculable. Esto es especialmente
+     * importante cuando la vista está totalmente de lejos.
+     * - Tal vez haya que interpolar, pero checkear los rangos visuales
+     * en relación al dibujo de los path para que no se generen saltos
+     * en la densidad visual.
+     */
+
+    // TEST
+    if(range <= (unsigned long)_bufferFrameSize) {
+        // samples
+        for(unsigned long i = 0; i < range; i++) { // el rango de i es int
+            bufferedData[i] = fakeDiskAudioData[sp + i];
+        }
+    } else if(range <= (unsigned long)_sampleRate) { // < 1'' (¿el cast está bien?)
+        // picos de samples
+        this->calcPeaks(sp, ep, range); // sobre diskAudioData
+    } else {
+        // picos de picos y picos
+        this->calcPeaks(sp, ep, range); // sobre diskPeaksData
+    }
+
+    qDebug() << "Back from Calc Peaks";
+
+    // graphics
     QPainterPath wavePath; // esto debería actualizar solo si es necesario
     qreal x = sp * _graphicUnit;
-    qreal y = this->linlin(bufferedData[sp], -1, 1, 0, this->boundingRect().height());
+    qreal y = this->linlin(bufferedData[0], -1, 1, 0, this->boundingRect().height());
+
+    unsigned long stepSize = range / _bufferFrameSize;
+    int loopSize = (int)std::min((unsigned long)_bufferFrameSize, range);
+    qDebug() << "Loop size: " << loopSize;
 
     wavePath.moveTo(x, y);
-    for(int i = sp + 1; i < ep; i++) {
-        x = i * _graphicUnit;
+    for(int i = 1; i < loopSize; i++) {
+        x = sp + i * _graphicUnit * (stepSize + 1); // falta remainder?
         y = this->linlin(bufferedData[i], -1, 1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
     }
 
+    qDebug() << "Assign path";
     waveShapeItem.setPath(wavePath);
 }
 
-void VisualWave::updatePeaksPath(int sp, int ep) // no son unsigned long, bufferedPeaksData está pre-cargada
+void VisualWave::updateControlPointsPath(unsigned long sp, unsigned long ep)
 {
-    Q_UNUSED(sp); Q_UNUSED(ep);
-    // TODO
-}
-
-void VisualWave::updateControlPointsPath(int sp, int ep)
-{
+    // *** pointers are uwrong
     QPainterPath controlsPath;
     QSizeF controlPointSize(this->calculateUntrasnformedFactorSize(QSize(controlPointRadio, controlPointRadio)));
     qreal x = sp * _graphicUnit;
@@ -214,7 +267,7 @@ void VisualWave::updateControlPointsPath(int sp, int ep)
     controlsPath.addEllipse(QPointF(x, y),
                             controlPointSize.width(),
                             controlPointSize.height());
-    for(int i = sp + 1; i < ep; i++) {
+    for(unsigned long i = sp + 1; i < ep; i++) {
         x = i * _graphicUnit;
         y = this->linlin(bufferedData[i], -1, 1, 0, this->boundingRect().height());
         controlsPath.addEllipse(QPointF(x, y),

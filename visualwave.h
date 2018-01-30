@@ -39,10 +39,11 @@ private:
     qreal linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax);
     QSizeF calculateUntrasnformedFactorSize(const QSizeF &size) const;
 
-    void updatePathItems(const qreal &lod);
-    void updateSignalPath(int sp, int ep);
+    void updatePathItems();
+    void calcPeaks(unsigned long sp, unsigned long ep, unsigned long range); // y disk data ref
+    void updateSignalPath(unsigned long sp, unsigned long ep);
     void updatePeaksPath(int sp, int ep);
-    void updateControlPointsPath(int sp, int ep);
+    void updateControlPointsPath(unsigned long sp, unsigned long ep);
 
     int obtainPointNumber(const QPointF &point);
     void editPoint(const QPointF &point);
@@ -65,13 +66,11 @@ private:
 
     QList<qreal> fakeDiskAudioData; // TEST
     unsigned long _fileFrameSize = 0;
-
     QList<qreal> fakeDiskPeakData; // TEST
-    QList<qreal> bufferedPeaksData;
     unsigned long _peaksFrameSize;
 
-    QList<qreal> bufferedData;
-    int _bufferFrameSize = 512;
+    QList<qreal> bufferedData; // luego tiene que ser un ring buffer?
+    int _bufferFrameSize = 1024; // i.e. 1080, depende de la resolución del monitor por algún factor
 
     qreal _sampleRate = 48000;
     qreal _graphicUnit = 1. / _sampleRate; // can't be zero, by now
