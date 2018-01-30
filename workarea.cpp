@@ -12,16 +12,18 @@
 WorkArea::WorkArea(QGraphicsItem *parent)
     : VisualGroup(parent)
 {
-    this->setSize(QSizeF(500, 500)); // TEST
+    this->setSize(QSizeF(200, 200)); // TEST
     this->setFlag(QGraphicsItem::ItemIsMovable, false); // no se puede mover o hay que sincronizar con sceneRect
 
     // TEST
     new VisualWave(this, QPointF(0, 0));
 
+    /*
     VisualBrickWall *brickWall = new VisualBrickWall(this, 100, 5); // default dur 30
     for(int i = 0; i < 10; i++) {
         new VisualBrick(brickWall, QPoint(i * 2, i * 5), QSize(2, 5));
     }
+    */
 }
 
 void WorkArea::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,

@@ -75,16 +75,16 @@ void VisualWave::readSoundFile()
     _peaksFrameSize = fakeDiskPeakData.size();
 
     // TEST
-    bufferedData = fakeDiskPeakData;
-    this->setBufferSize(_peaksFrameSize);
-    this->setSampleRate(sr);
-    this->setSize(QSizeF(_peaksFrameSize * this->graphicUnit(), 2));
+    //bufferedData = fakeDiskPeakData;
+    //this->setBufferSize(_peaksFrameSize);
+    //this->setSampleRate(sr);
+    //this->setSize(QSizeF(_peaksFrameSize * this->graphicUnit(), 2));
 
     // TEST
-    //bufferedData = fakeDiskAudioData;
-    //this->setBufferSize(_fileFrameSize);
-    //this->setSampleRate(sr);
-    //this->setSize(QSizeF(_fileFrameSize * this->graphicUnit(), 2));
+    bufferedData = fakeDiskAudioData;
+    this->setBufferSize(_fileFrameSize);
+    this->setSampleRate(sr);
+    this->setSize(QSizeF(_fileFrameSize * this->graphicUnit(), 2));
 }
 
 void VisualWave::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -159,50 +159,70 @@ QSizeF VisualWave::calculateUntrasnformedFactorSize(const QSizeF &size) const
 
 void VisualWave::updatePathItems(const qreal &lod)
 {
-    // se necesitaría mantener la última para cuando la vista
-    // no está activa para que se pueda ver cuando la ventana
-    // no está en foco, o ver si se puede cambiar la implementación.
+    // es mejor no mantener las vistas no activas así
+    // el elemento se puede visualizar con distintas vistas
+
     QRectF vr = this->visibleRect();
     qreal visualStartPos = this->floorQuant(vr.left(), _graphicUnit); // esto puede quedar afuera de lo visual, pero no es <0
     qreal visualEndPos = visualStartPos + this->floorQuant(vr.width(), _graphicUnit);
-    unsigned long startPos = (unsigned long)(visualStartPos / _graphicUnit); // aunque no debería poder ser ulong
+    unsigned long startPos = (unsigned long)(visualStartPos / _graphicUnit); // sí, puede ser ulong
     unsigned long endPos = (unsigned long)(visualEndPos / _graphicUnit);
 
-    qDebug() << "visual start: " << visualStartPos << "visual end: " << visualEndPos;
-    qDebug() << "start pos: " << startPos << "end pos: " << endPos;
+    // cargar los buffers según sea necesario
 
+    // if lod < tanto
+    this->updatePeaksPath(startPos, endPos); // todo
+    // else
+    this->updateSignalPath(startPos, endPos);
+    if(lod > controlPointLOD)
+        this->updateControlPointsPath(startPos, endPos);
+    else
+        controlPointsItem.setPath(QPainterPath()); // clear...
+
+    lastUpdateStartPos = startPos;
+}
+
+void VisualWave::updateSignalPath(int sp, int ep) // no son unsigned long, bufferedData está pre-cargada
+{
     QPainterPath wavePath; // esto debería actualizar solo si es necesario
-    QPainterPath controlsPath;
+    qreal x = sp * _graphicUnit;
+    qreal y = this->linlin(bufferedData[sp], -1, 1, 0, this->boundingRect().height());
 
-    // waveShapeItem
-    qreal x = visualStartPos;
-    qreal y = this->linlin(bufferedData[startPos], -1, 1, 0, this->boundingRect().height());
     wavePath.moveTo(x, y);
+    for(int i = sp + 1; i < ep; i++) {
+        x = i * _graphicUnit;
+        y = this->linlin(bufferedData[i], -1, 1, 0, this->boundingRect().height());
+        wavePath.lineTo(x, y);
+    }
 
-    // controlPointsItem
-    QSizeF controlPointSize(
-                this->calculateUntrasnformedFactorSize(QSize(controlPointRadio, controlPointRadio)));
-    if(lod > controlPointLOD) {
+    waveShapeItem.setPath(wavePath);
+}
+
+void VisualWave::updatePeaksPath(int sp, int ep) // no son unsigned long, bufferedPeaksData está pre-cargada
+{
+    Q_UNUSED(sp); Q_UNUSED(ep);
+    // TODO
+}
+
+void VisualWave::updateControlPointsPath(int sp, int ep)
+{
+    QPainterPath controlsPath;
+    QSizeF controlPointSize(this->calculateUntrasnformedFactorSize(QSize(controlPointRadio, controlPointRadio)));
+    qreal x = sp * _graphicUnit;
+    qreal y = this->linlin(bufferedData[sp], -1, 1, 0, this->boundingRect().height());
+
+    controlsPath.addEllipse(QPointF(x, y),
+                            controlPointSize.width(),
+                            controlPointSize.height());
+    for(int i = sp + 1; i < ep; i++) {
+        x = i * _graphicUnit;
+        y = this->linlin(bufferedData[i], -1, 1, 0, this->boundingRect().height());
         controlsPath.addEllipse(QPointF(x, y),
                                 controlPointSize.width(),
                                 controlPointSize.height());
     }
 
-    // both
-    for(unsigned long i = startPos + 1; i < endPos; i++) {
-        x = i * _graphicUnit;
-        y = this->linlin(bufferedData[i], -1, 1, 0, this->boundingRect().height());
-        wavePath.lineTo(x, y);
-        if(lod > controlPointLOD) {
-            controlsPath.addEllipse(QPointF(x, y),
-                                    controlPointSize.width(),
-                                    controlPointSize.height());
-        }
-    }
-
-    waveShapeItem.setPath(wavePath);
     controlPointsItem.setPath(controlsPath);
-    lastUpdateStartPos = startPos;
 }
 
 int VisualWave::obtainPointNumber(const QPointF &point)
