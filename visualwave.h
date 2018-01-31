@@ -40,8 +40,9 @@ private:
     QSizeF calculateUntrasnformedFactorSize(const QSizeF &size) const;
 
     void updatePathItems();
-    void calcPeaks(unsigned long sp, unsigned long ep, unsigned long range, const QList<qreal> &diskData);
     void updateSignalPath(unsigned long sp, unsigned long ep);
+    void updateBufferedData(unsigned long sp, unsigned long ep);
+    void calcPeaks(unsigned long sp, unsigned long ep, const QList<qreal> &diskData);
     void updatePeaksPath(int sp, int ep);
     void updateControlPointsPath(unsigned long sp, unsigned long ep);
 
@@ -66,7 +67,7 @@ private:
 
     QList<qreal> fakeDiskAudioData; // TEST
     unsigned long _fileFrameSize = 0;
-    QList<qreal> fakeDiskPeakData; // TEST
+    QList<qreal> fakeDiskPeaksData; // TEST
     int peaksBlockSize = 64;
     unsigned long _peaksFrameSize;
 
