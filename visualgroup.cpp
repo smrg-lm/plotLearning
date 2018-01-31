@@ -61,7 +61,7 @@ QGraphicsView *VisualGroup::getCurrentActiveView() const
         QObjectList sibilings = views[i]->parentWidget()->children();
         for(int j = 0; j < sibilings.size(); j++) {
             QWidget *child = dynamic_cast<QWidget*>(sibilings[j]);
-            qDebug() << "Child[j]: " << child << j;
+            //qDebug() << "Child[j]: " << child << j;
             if(child && child->hasFocus()) return views[i];
         }
     }

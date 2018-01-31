@@ -40,7 +40,7 @@ private:
     QSizeF calculateUntrasnformedFactorSize(const QSizeF &size) const;
 
     void updatePathItems();
-    void calcPeaks(unsigned long sp, unsigned long ep, unsigned long range); // y disk data ref
+    void calcPeaks(unsigned long sp, unsigned long ep, unsigned long range, const QList<qreal> &diskData);
     void updateSignalPath(unsigned long sp, unsigned long ep);
     void updatePeaksPath(int sp, int ep);
     void updateControlPointsPath(unsigned long sp, unsigned long ep);
@@ -67,8 +67,11 @@ private:
     QList<qreal> fakeDiskAudioData; // TEST
     unsigned long _fileFrameSize = 0;
     QList<qreal> fakeDiskPeakData; // TEST
+    int peaksBlockSize = 64;
     unsigned long _peaksFrameSize;
 
+    unsigned long prevStartPos = 1;
+    unsigned long prevEndPos = 0; // invalid pos, will be false (seek another way)
     QList<qreal> bufferedData; // luego tiene que ser un ring buffer?
     int _bufferFrameSize = 1024; // i.e. 1080, depende de la resolución del monitor por algún factor
 
