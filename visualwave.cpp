@@ -200,6 +200,22 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
     waveShapeItem.setPath(wavePath);
 }
 
+/*
+ * Idea algoritmo:
+ *
+ * - el buffer carga el doble de lo que muestra 1 a 1 (1:1)
+ * - se va transformando gráficamente (se escala el path) hasta que
+ *   pasa a ser 2:1 (en realidad < 2:1)
+ * - se re-carga el buffer con los picos del doble (2:1)
+ * - se va transformando....
+ *
+ * - para los picos se guarda (cachea) el valor del pico y el offset
+ *   dentro del bloque
+ * - los picos se recalculan cuando duplican en base al buffer
+ *   anterior para la primera mitad (la totalidad se es ascendente)
+ * - aún no estoy considerando el scroll
+ */
+
 void VisualWave::updateBufferedData(unsigned long sp, unsigned long ep)
 {
     /*
