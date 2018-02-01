@@ -180,17 +180,19 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
 
     // graphics
     QPainterPath wavePath;
-    qreal x = sp * _graphicUnit;
+    qreal x = sp * _graphicUnit; // en este método habría que usar visual start point para sync
     qreal y = this->linlin(bufferedData[0], 1, -1, 0, this->boundingRect().height());
 
     unsigned long range = ep - sp;
     unsigned long stepSize = range / _bufferFrameSize;
 
+    // tal vez se puedea hacer que el loop siempre sea
+    // sobre el tamaño del buffer y escalar visualmente
     int loopSize = (int)std::min((unsigned long)_bufferFrameSize, range);
 
     wavePath.moveTo(x, y);
     for(int i = 1; i < loopSize; i++) {
-        x = (sp + i * (stepSize + 1)) * _graphicUnit; // falta remainder?
+        x = (sp + i * (stepSize + 1)) * _graphicUnit; // falta remainder? // visual start pos
         y = this->linlin(bufferedData[i], 1, -1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
     }
