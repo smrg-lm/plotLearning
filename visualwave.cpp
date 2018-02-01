@@ -55,8 +55,11 @@ void VisualWave::readSoundFile()
     // create fake file data (disk data)
     int sr = 48000;
     _fileFrameSize = sr * 60 * 2; // 10'? ver QList index size
-    for(unsigned long i = 0; i < _fileFrameSize; i++)
-        fakeDiskAudioData.append(dist(e2));
+    for(unsigned long i = 0; i < _fileFrameSize; i++) {
+        if(i % (sr/4) == 0) fakeDiskAudioData.append(1); else fakeDiskAudioData.append(0);
+        // hay que comprobar que la unidad gráfica y los picos den información visual coherente
+        //fakeDiskAudioData.append(dist(e2));
+    }
 
     // create (fake) peak data (disk data)
     for(unsigned long i = 0; i < _fileFrameSize / peaksBlockSize; i++) { // puede ignorar hasta las peakWindowSize-1 últimas muestras
@@ -178,7 +181,7 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
     // graphics
     QPainterPath wavePath;
     qreal x = sp * _graphicUnit;
-    qreal y = this->linlin(bufferedData[0], -1, 1, 0, this->boundingRect().height());
+    qreal y = this->linlin(bufferedData[0], 1, -1, 0, this->boundingRect().height());
 
     unsigned long range = ep - sp;
     unsigned long stepSize = range / _bufferFrameSize;
@@ -188,7 +191,7 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
     wavePath.moveTo(x, y);
     for(int i = 1; i < loopSize; i++) {
         x = (sp + i * (stepSize + 1)) * _graphicUnit; // falta remainder?
-        y = this->linlin(bufferedData[i], -1, 1, 0, this->boundingRect().height());
+        y = this->linlin(bufferedData[i], 1, -1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
     }
 
@@ -269,14 +272,14 @@ void VisualWave::updateControlPointsPath(unsigned long sp, unsigned long ep, qre
     }
 
     qreal x = sp * _graphicUnit;
-    qreal y = this->linlin(bufferedData[sp], -1, 1, 0, this->boundingRect().height());
+    qreal y = this->linlin(bufferedData[sp], 1, -1, 0, this->boundingRect().height());
 
     controlsPath.addEllipse(QPointF(x, y),
                             controlPointSize.width(),
                             controlPointSize.height());
     for(unsigned long i = sp + 1; i < ep; i++) {
         x = i * _graphicUnit;
-        y = this->linlin(bufferedData[i], -1, 1, 0, this->boundingRect().height());
+        y = this->linlin(bufferedData[i], 1, -1, 0, this->boundingRect().height());
         controlsPath.addEllipse(QPointF(x, y),
                                 controlPointSize.width(),
                                 controlPointSize.height());
@@ -307,8 +310,8 @@ void VisualWave::editPoint(const QPointF &point)
      * enable tooltip showing values in rt
      */
     if(point.y() > this->boundingRect().height() || point.y() < 0) return;
-    qreal newValue = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
+    qreal newValue = this->linlin(point.y(), 0, this->boundingRect().height(), 1, -1);
     if(newValue > 1) newValue = 1; if(newValue < -1) newValue = -1;
-    //bufferedData[lastUpdateStartPos + selectedPointNumber] = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
+    //bufferedData[lastUpdateStartPos + selectedPointNumber] = this->linlin(point.y(), 0, this->boundingRect().height(), 1, -1);
     this->update();
 }
