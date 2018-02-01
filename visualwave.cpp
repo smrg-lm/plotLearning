@@ -119,9 +119,9 @@ qreal VisualWave::linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qr
     return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
 }
 
-QSizeF VisualWave::calculateUntrasnformedFactorSize(const QSizeF &size) const
+QSizeF VisualWave::cufs(const QSizeF &size) const
 {
-    // counter transform por point size without translantion
+    // Calculate Untrasnformed Factor Size
     // (QTransform::map documentation)
     QGraphicsView *view = this->getCurrentActiveView();
     qreal psX, psY;
@@ -157,22 +157,21 @@ void VisualWave::updatePathItems()
     QRectF vr = this->visibleRect();
     qreal visualStartPos = this->floorQuant(vr.left(), _graphicUnit); // esto puede quedar afuera de lo visual, pero no es <0
     qreal visualEndPos = visualStartPos + this->floorQuant(vr.width(), _graphicUnit);
-    unsigned long startPos = (unsigned long)(visualStartPos / _graphicUnit); // sí, puede ser ulong
+    unsigned long startPos = (unsigned long)(visualStartPos / _graphicUnit);
     unsigned long endPos = (unsigned long)(visualEndPos / _graphicUnit);
 
+    if(startPos == lastUpdateStartPos && endPos == lastUpdateEndPos) // e.g. far sight
+        return;
+
     this->updateSignalPath(startPos, endPos);
-    // LOD es endPos - startPos
-    //this->updateControlPointsPath(startPos, endPos);
-    //controlPointsItem.setPath(QPainterPath()); // clear...
+    this->updateControlPointsPath(startPos, endPos, visualEndPos - visualStartPos);
 
     lastUpdateStartPos = startPos;
+    lastUpdateEndPos = endPos;
 }
 
 void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
 {
-    if(sp == prevStartPos && ep == prevEndPos) return; // far sight
-    prevStartPos = sp; prevEndPos = ep;
-
     // data
     this->updateBufferedData(sp, ep);
 
@@ -257,11 +256,18 @@ void VisualWave::calcPeaks(unsigned long sp, unsigned long ep,
     bufferedData[_bufferFrameSize - 1] = peak;
 }
 
-void VisualWave::updateControlPointsPath(unsigned long sp, unsigned long ep)
+void VisualWave::updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange)
 {
-    // *** pointers are uwrong
+    if(!visualRange) return;
+
     QPainterPath controlsPath;
-    QSizeF controlPointSize(this->calculateUntrasnformedFactorSize(QSize(controlPointRadio, controlPointRadio)));
+    QSizeF controlPointSize(this->cufs(QSize(controlPointRadio, controlPointRadio)));
+
+    if((ep - sp) * controlPointSize.width() * 3 > visualRange) { // 3 -> 0.5 space...
+        controlPointsItem.setPath(controlsPath); // clear, always...
+        return;
+    }
+
     qreal x = sp * _graphicUnit;
     qreal y = this->linlin(bufferedData[sp], -1, 1, 0, this->boundingRect().height());
 
@@ -294,12 +300,15 @@ int VisualWave::obtainPointNumber(const QPointF &point)
 
 void VisualWave::editPoint(const QPointF &point)
 {
-    // this is not cpu friendly (yet)
+    /*
+     * REDO: edited data can't be in buffered visual data
+     * this is not cpu friendly (yet)
+     * needs some kind of range and resolution control
+     * enable tooltip showing values in rt
+     */
     if(point.y() > this->boundingRect().height() || point.y() < 0) return;
     qreal newValue = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
     if(newValue > 1) newValue = 1; if(newValue < -1) newValue = -1;
-    // this needs some kind of range and resolution control
-    // and enable tooltip showing values in rt
-    bufferedData[lastUpdateStartPos + selectedPointNumber] = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
+    //bufferedData[lastUpdateStartPos + selectedPointNumber] = this->linlin(point.y(), 0, this->boundingRect().height(), -1, 1);
     this->update();
 }

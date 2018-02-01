@@ -37,14 +37,14 @@ protected:
 
 private:
     qreal linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax);
-    QSizeF calculateUntrasnformedFactorSize(const QSizeF &size) const;
+    QSizeF cufs(const QSizeF &size) const;
 
     void updatePathItems();
     void updateSignalPath(unsigned long sp, unsigned long ep);
     void updateBufferedData(unsigned long sp, unsigned long ep);
     void calcPeaks(unsigned long sp, unsigned long ep, const QList<qreal> &diskData);
     void updatePeaksPath(int sp, int ep);
-    void updateControlPointsPath(unsigned long sp, unsigned long ep);
+    void updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange);
 
     int obtainPointNumber(const QPointF &point);
     void editPoint(const QPointF &point);
@@ -52,11 +52,13 @@ private:
     QGraphicsPathItem waveShapeItem;
     //QGraphicsPathItem wavePeaksItem;
     QGraphicsPathItem controlPointsItem;
-    qreal controlPointLOD = 20000; //1800; //6; // is more hirizontal than vertical
+
     qreal controlPointRadio = 5;
     bool pointSelected = false;
     int selectedPointNumber = -1;
-    unsigned long lastUpdateStartPos;
+
+    unsigned long lastUpdateStartPos = 1;
+    unsigned long lastUpdateEndPos = 0; // invalid pos, will be false (seek another way)
 
     // this could be another class for composition
     unsigned long fileFrameSize() { return _fileFrameSize; }
@@ -71,8 +73,6 @@ private:
     int peaksBlockSize = 64;
     unsigned long _peaksFrameSize;
 
-    unsigned long prevStartPos = 1;
-    unsigned long prevEndPos = 0; // invalid pos, will be false (seek another way)
     QList<qreal> bufferedData; // luego tiene que ser un ring buffer?
     int _bufferFrameSize = 1024; // i.e. 1080, depende de la resolución del monitor por algún factor
 
