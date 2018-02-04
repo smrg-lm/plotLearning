@@ -56,7 +56,7 @@ void VisualWave::readSoundFile()
     int sr = 48000;
     _fileFrameSize = sr * 60 * 2; // 10'? ver QList index size
     for(unsigned long i = 0; i < _fileFrameSize; i++) {
-        if(i % (sr/4) == 0) fakeDiskAudioData.append(1); else fakeDiskAudioData.append(0);
+        if(i % (sr/1) == 0) fakeDiskAudioData.append(1); else fakeDiskAudioData.append(0);
         // hay que comprobar que la unidad gráfica y los picos den información visual coherente
         //fakeDiskAudioData.append(dist(e2));
     }
@@ -175,24 +175,22 @@ void VisualWave::updatePathItems()
 
 void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
 {
+    unsigned long range = ep - sp;
+
     // data
-    this->updateBufferedData(sp, ep);
+    this->updateBufferedData(sp, range);
 
     // graphics
     QPainterPath wavePath;
-    qreal x = sp * _graphicUnit; // en este método habría que usar visual start point para sync
+    qreal x = sp * _graphicUnit;
     qreal y = this->linlin(bufferedData[0], 1, -1, 0, this->boundingRect().height());
-
-    unsigned long range = ep - sp;
-    unsigned long stepSize = range / _bufferFrameSize;
-
-    // tal vez se puedea hacer que el loop siempre sea
-    // sobre el tamaño del buffer y escalar visualmente
-    int loopSize = (int)std::min((unsigned long)_bufferFrameSize, range);
-
     wavePath.moveTo(x, y);
+
+    int loopSize = range / currentReadBlockSize; // falta el remanente, da int dentro de _bufferFrameSize
+
+    // no dibuja en scroll, siempre de 0 sp
     for(int i = 1; i < loopSize; i++) {
-        x = (sp + i * (stepSize + 1)) * _graphicUnit; // falta remainder? // visual start pos
+        x = sp + i * _graphicUnit * currentReadBlockSize;
         y = this->linlin(bufferedData[i], 1, -1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
     }
@@ -203,7 +201,8 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
 /*
  * Idea algoritmo:
  *
- * - el buffer carga el doble de lo que muestra 1 a 1 (1:1)
+ * - el buffer carga el doble de lo que muestra 1 a 1 (1:1), para
+ *   una sola imagen
  * - se va transformando gráficamente (se escala el path) hasta que
  *   pasa a ser 2:1 (en realidad < 2:1)
  * - se re-carga el buffer con los picos del doble (2:1)
@@ -214,68 +213,122 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
  * - los picos se recalculan cuando duplican en base al buffer
  *   anterior para la primera mitad (la totalidad se es ascendente)
  * - aún no estoy considerando el scroll
+ *
+ * Tal vez no funcione computacionalmente hablando, tal vez sea
+ * crear una "imagen", para distintos niveles de zoom, pero luego
+ * está el problema de la edición. El Audacity tiene que tener algún
+ * algoritmo práctico. Igualmente lo más importante tienen que ser
+ * los picos.
  */
 
-void VisualWave::updateBufferedData(unsigned long sp, unsigned long ep)
+void VisualWave::updateBufferedData(unsigned long sp, unsigned long range)
 {
-    /*
-     * Importante:
-     * - Tal vez haya que interpolar, pero checkear los rangos visuales
-     * en relación al dibujo de los path para que no se generen saltos
-     * en la densidad visual.
-     */
+    qDebug() << "START OF UPDATE";
 
-    // data
-    unsigned long range = ep - sp; // ep - sp es range, es LOD
-    if(range < (unsigned long)_bufferFrameSize) {
-        // samples
-        for(unsigned long i = 0; i < range; i++) { // el rango de i es int
-            bufferedData[i] = fakeDiskAudioData[sp + i];
-        }
-    } else if(range < (unsigned long)peaksBlockSize * _bufferFrameSize) {
-        // picos de samples
-        this->calcPeaks(sp, ep, fakeDiskAudioData);
-    } else {
-        /*
-         * range/peaksBlockSize tiene que ser mayor que _bufferSize, entonces
-         * el problema es cuándo (range / peaksBlockSize)/_bufferSize es igual o mayor que 1,
-         * despejando: range == peaksBlockSize * _bufferSize, por lo tanto la condición
-         * anterior tiene que ser range <= peaksBlockSize * _bufferSize para que
-         * este else no crashee. Pero esa relación no garantiza nada visualmente... :)
-         * Ver que la cantidad de operaciones para obtener los picos sea relativamente
-         * acotada y constante (cpu, importante).
-         */
-        // picos de picos
-        this->calcPeaks(sp/peaksBlockSize, ep/peaksBlockSize, fakeDiskPeaksData);
+    unsigned long auxBufferSize;
+    int auxPow2 = 0;
+    while(auxPow2 < 32) {
+        auxBufferSize = _bufferFrameSize * std::pow(2, auxPow2);
+        if(range < auxBufferSize) break;
+        auxPow2 += 1;
     }
+    currentReadPowN = auxPow2;
+    currentReadBlockSize = std::pow(2, currentReadPowN);
+    QList<qreal> diskData = fakeDiskAudioData; // test
+
+    qDebug() << "START POS: " << sp;
+    qDebug() << "RANGE: " << range;
+    qDebug() << "BLOCK LEVEL: " << currentReadPowN;
+    qDebug() << "BLOCK SIZE: " << currentReadBlockSize;
+    qDebug() << "READ SIZE: " << _bufferFrameSize * currentReadBlockSize;
+    qDebug() << "DATA SIZE: " << diskData.size();
+
+    for(int i = 0; i < _bufferFrameSize; i++) {
+        unsigned long blockOffset = i * currentReadBlockSize;
+        qreal peak, data;
+
+        if(sp + blockOffset + currentReadBlockSize < (unsigned long)diskData.size()) {
+            peak = 0;
+            for(unsigned long j = 0; j < currentReadBlockSize; j++) { // el rango de j es int
+                data = diskData[sp + blockOffset + j];
+                if(std::fabs(data) > std::fabs(peak)) peak = data;
+            }
+            bufferedData[i] = peak;
+        } else {
+            // resto
+        }
+    }
+
+    qDebug() << "END OF UPDATE";
 }
 
+/*
 void VisualWave::calcPeaks(unsigned long sp, unsigned long ep,
-                           const QList<qreal> &diskData)
+                           unsigned long range, const QList<qreal> &diskData)
 {
-    // range *must be* >= _bufferFrameSize
-    unsigned long range = ep - sp;
-    unsigned long stepSize = range / _bufferFrameSize; // repite en llamadora
-    unsigned long resto = range % _bufferFrameSize;
-    qreal peak, data;
-
-    for(unsigned long i = 0; i < (unsigned long)_bufferFrameSize - 1; i++) { // el rango de i es int
-        peak = 0;
-        for(unsigned long j = 0; j < stepSize; j++) { // el rango de j es int
-            data = diskData[sp + (stepSize * i) + j];
-            if(std::fabs(data) > std::fabs(peak)) peak = data;
-        }
-        bufferedData[i] = peak;
-    }
-
-    // remainder
-    peak = 0;
-    for(unsigned long j = 0; j < resto; j++) {
-        data = diskData[ep - 1 - j]; // backwards from ep
-        if(data > peak) peak = data;
-    }
-    bufferedData[_bufferFrameSize - 1] = peak;
 }
+*/
+
+//void VisualWave::updateBufferedData(unsigned long sp, unsigned long ep)
+//{
+//    /*
+//     * Importante:
+//     * - Tal vez haya que interpolar, pero checkear los rangos visuales
+//     * en relación al dibujo de los path para que no se generen saltos
+//     * en la densidad visual.
+//     */
+
+//    // data
+//    unsigned long range = ep - sp; // ep - sp es range, es LOD
+//    if(range < (unsigned long)_bufferFrameSize) {
+//        // samples
+//        for(unsigned long i = 0; i < range; i++) { // el rango de i es int
+//            bufferedData[i] = fakeDiskAudioData[sp + i];
+//        }
+//    } else if(range < (unsigned long)peaksBlockSize * _bufferFrameSize) {
+//        // picos de samples
+//        this->calcPeaks(sp, ep, fakeDiskAudioData);
+//    } else {
+//        /*
+//         * range/peaksBlockSize tiene que ser mayor que _bufferSize, entonces
+//         * el problema es cuándo (range / peaksBlockSize)/_bufferSize es igual o mayor que 1,
+//         * despejando: range == peaksBlockSize * _bufferSize, por lo tanto la condición
+//         * anterior tiene que ser range <= peaksBlockSize * _bufferSize para que
+//         * este else no crashee. Pero esa relación no garantiza nada visualmente... :)
+//         * Ver que la cantidad de operaciones para obtener los picos sea relativamente
+//         * acotada y constante (cpu, importante).
+//         */
+//        // picos de picos
+//        this->calcPeaks(sp/peaksBlockSize, ep/peaksBlockSize, fakeDiskPeaksData);
+//    }
+//}
+
+//void VisualWave::calcPeaks(unsigned long sp, unsigned long ep,
+//                           const QList<qreal> &diskData)
+//{
+//    // range *must be* >= _bufferFrameSize
+//    unsigned long range = ep - sp;
+//    unsigned long stepSize = range / _bufferFrameSize; // repite en llamadora
+//    unsigned long resto = range % _bufferFrameSize;
+//    qreal peak, data;
+
+//    for(unsigned long i = 0; i < (unsigned long)_bufferFrameSize - 1; i++) { // el rango de i es int
+//        peak = 0;
+//        for(unsigned long j = 0; j < stepSize; j++) { // el rango de j es int
+//            data = diskData[sp + (stepSize * i) + j];
+//            if(std::fabs(data) > std::fabs(peak)) peak = data;
+//        }
+//        bufferedData[i] = peak;
+//    }
+
+//    // remainder
+//    peak = 0;
+//    for(unsigned long j = 0; j < resto; j++) {
+//        data = diskData[ep - 1 - j]; // backwards from ep
+//        if(data > peak) peak = data;
+//    }
+//    bufferedData[_bufferFrameSize - 1] = peak;
+//}
 
 void VisualWave::updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange)
 {

@@ -41,8 +41,8 @@ private:
 
     void updatePathItems();
     void updateSignalPath(unsigned long sp, unsigned long ep);
-    void updateBufferedData(unsigned long sp, unsigned long ep);
-    void calcPeaks(unsigned long sp, unsigned long ep, const QList<qreal> &diskData);
+    void updateBufferedData(unsigned long sp, unsigned long range);
+    //void calcPeaks(unsigned long sp, unsigned long ep, const QList<qreal> &diskData);
     void updatePeaksPath(int sp, int ep);
     void updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange);
 
@@ -75,6 +75,8 @@ private:
 
     QList<qreal> bufferedData; // luego tiene que ser un ring buffer?
     int _bufferFrameSize = 1024; // i.e. 1080, depende de la resolución del monitor por algún factor
+    unsigned long currentReadBlockSize = 0;
+    int currentReadPowN = 0;
 
     qreal _sampleRate = 48000;
     qreal _graphicUnit = 1. / _sampleRate; // can't be zero, by now

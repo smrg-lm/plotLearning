@@ -31,13 +31,13 @@ void BaseView::resizeEvent(QResizeEvent *event) // TEST
 
 void BaseView::wheelEvent(QWheelEvent *event)
 {
-    qDebug() << "BaseView wheelEvent: " << event;
+    //qDebug() << "BaseView wheelEvent: " << event;
 
     bool shift = event->modifiers() & Qt::ShiftModifier;
     bool ctrl = event->modifiers() & Qt::ControlModifier;
     qreal ad = 1 + (qreal)event->angleDelta().y() / (360 * 5); // ~0.06%
 
-    qDebug() << "ad: " << ad;
+    //qDebug() << "ad: " << ad;
 
     if(shift && ctrl) {
         this->scale(ad, ad);
