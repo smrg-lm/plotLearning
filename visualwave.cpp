@@ -56,8 +56,7 @@ void VisualWave::readSoundFile()
     int sr = 48000;
     _fileFrameSize = sr * 60 * 2.5; // 10'? ver QList index size
     for(unsigned long i = 0; i < _fileFrameSize; i++) {
-        if(i % (sr/1) == 0) fakeDiskAudioData.append(1); else fakeDiskAudioData.append(0);
-        // hay que comprobar que la unidad gráfica y los picos den información visual coherente
+        if(i % (sr/10) == 0) fakeDiskAudioData.append(1); else fakeDiskAudioData.append(0);
         //fakeDiskAudioData.append(dist(e2));
     }
 
@@ -75,7 +74,7 @@ void VisualWave::readSoundFile()
 
     // init buffer data (precario, hay que calcular _bufferFrameSize)
     for(int i = 0; i < _bufferFrameSize; i++)
-        bufferedData.append(0.0);
+        bufferedData.append(Peak());
 
     this->setSampleRate(sr);
     this->setSize(QSizeF(_fileFrameSize * this->graphicUnit(), 2));
@@ -182,8 +181,8 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
 
     // graphics
     QPainterPath wavePath;
-    qreal x = sp * _graphicUnit;
-    qreal y = this->linlin(bufferedData[0], 1, -1, 0, this->boundingRect().height());
+    qreal x = (sp + bufferedData[0].offset) * _graphicUnit;
+    qreal y = this->linlin(bufferedData[0].value, 1, -1, 0, this->boundingRect().height());
     wavePath.moveTo(x, y);
 
     int loopSize = range / currentReadBlockSize; // da int dentro de _bufferFrameSize
@@ -192,8 +191,8 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
     //qDebug() << "loopSize: " << loopSize;
 
     for(int i = 1; i < loopSize; i++) {
-        x = (sp + i * currentReadBlockSize) * _graphicUnit;
-        y = this->linlin(bufferedData[i], 1, -1, 0, this->boundingRect().height());
+        x = (sp + i * currentReadBlockSize + bufferedData[i].offset) * _graphicUnit;
+        y = this->linlin(bufferedData[i].value, 1, -1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
     }
 
@@ -254,24 +253,32 @@ void VisualWave::updateBufferedData(unsigned long sp, unsigned long range)
 
     for(int i = 0; i < _bufferFrameSize; i++) {
         unsigned long blockOffset = i * currentReadBlockSize;
-        qreal peak, data;
+        qreal offset, peak, data;
 
         if(sp + blockOffset + currentReadBlockSize <= (unsigned long)diskData.size()) { // puede ser igual, porque es el tope, o no?
-            peak = 0;
+            offset = 0; peak = 0;
             for(unsigned long j = 0; j < currentReadBlockSize; j++) { // el rango de j es int
                 data = diskData[sp + blockOffset + j];
-                if(std::fabs(data) > std::fabs(peak)) peak = data;
+                if(std::fabs(data) > std::fabs(peak)) {
+                    offset = j;
+                    peak = data;
+                }
             }
-            bufferedData[i] = peak;
+            bufferedData[i].offset = offset;
+            bufferedData[i].value = peak;
         } else if(sp + blockOffset < (unsigned long)diskData.size()) {
             // resto en la lectura del archivo
             unsigned long remainderReadBlockSize = (unsigned long)diskData.size() - (sp + blockOffset);
-            peak = 0;
+            offset = 0; peak = 0;
             for(unsigned long j = 0; j < remainderReadBlockSize; j++) {
                 data = diskData[sp + blockOffset + j];
-                if(std::fabs(data) > std::fabs(peak)) peak = data;
+                if(std::fabs(data) > std::fabs(peak)) {
+                    offset = j;
+                    peak = data;
+                }
             }
-            bufferedData[i] = peak;
+            bufferedData[i].offset = offset;
+            bufferedData[i].value = peak;
         } else {
             // no hay más data para llenar el buffer
             break;
@@ -361,15 +368,15 @@ void VisualWave::updateControlPointsPath(unsigned long sp, unsigned long ep, qre
         return;
     }
 
-    qreal x = sp * _graphicUnit;
-    qreal y = this->linlin(bufferedData[sp], 1, -1, 0, this->boundingRect().height());
+    qreal x = (sp + bufferedData[sp].offset) * _graphicUnit;
+    qreal y = this->linlin(bufferedData[sp].value, 1, -1, 0, this->boundingRect().height());
 
     controlsPath.addEllipse(QPointF(x, y),
                             controlPointSize.width(),
                             controlPointSize.height());
     for(unsigned long i = sp + 1; i < ep; i++) {
-        x = i * _graphicUnit;
-        y = this->linlin(bufferedData[i], 1, -1, 0, this->boundingRect().height());
+        x = (i + bufferedData[i].offset) * _graphicUnit;
+        y = this->linlin(bufferedData[i].value, 1, -1, 0, this->boundingRect().height());
         controlsPath.addEllipse(QPointF(x, y),
                                 controlPointSize.width(),
                                 controlPointSize.height());

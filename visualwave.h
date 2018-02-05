@@ -73,7 +73,14 @@ private:
     int peaksBlockSize = 64;
     unsigned long _peaksFrameSize;
 
-    QList<qreal> bufferedData; // luego tiene que ser un ring buffer?
+    struct Peak {
+        Peak(int offset = 0, qreal value = 0)
+            : offset(offset), value(value) {}
+        int offset;
+        qreal value;
+    };
+
+    QList<Peak> bufferedData; // luego tiene que ser un ring buffer?
     int _bufferFrameSize = 1024; // i.e. 1080, depende de la resolución del monitor por algún factor
     unsigned long currentReadBlockSize = -1;
     unsigned long currentStartPos = -1;
