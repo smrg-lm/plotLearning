@@ -75,8 +75,9 @@ private:
 
     QList<qreal> bufferedData; // luego tiene que ser un ring buffer?
     int _bufferFrameSize = 1024; // i.e. 1080, depende de la resolución del monitor por algún factor
-    unsigned long currentReadBlockSize = 0;
-    int currentReadPowN = 0;
+    unsigned long currentReadBlockSize = -1;
+    unsigned long currentStartPos = -1;
+    int currentReadPowN = -1;
 
     qreal _sampleRate = 48000;
     qreal _graphicUnit = 1. / _sampleRate; // can't be zero, by now

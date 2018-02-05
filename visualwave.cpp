@@ -54,7 +54,7 @@ void VisualWave::readSoundFile()
 
     // create fake file data (disk data)
     int sr = 48000;
-    _fileFrameSize = sr * 10; // 60 * 2; // 10'? ver QList index size
+    _fileFrameSize = sr * 60 * 2.5; // 10'? ver QList index size
     for(unsigned long i = 0; i < _fileFrameSize; i++) {
         if(i % (sr/1) == 0) fakeDiskAudioData.append(1); else fakeDiskAudioData.append(0);
         // hay que comprobar que la unidad gráfica y los picos den información visual coherente
@@ -228,13 +228,18 @@ void VisualWave::updateBufferedData(unsigned long sp, unsigned long range)
     //qDebug() << "START OF UPDATE";
 
     unsigned long auxReadSize;
-    int auxPow2 = 0;
-    while(auxPow2 < 32) {
-        auxReadSize = _bufferFrameSize * std::pow(2, auxPow2);
+    int auxPowN = 0;
+    while(auxPowN < 32) {
+        auxReadSize = _bufferFrameSize * std::pow(2, auxPowN);
         if(range < auxReadSize) break;
-        auxPow2 += 1;
+        auxPowN += 1;
     }
-    currentReadPowN = auxPow2;
+
+    // no necesita actualizar, el buffer está cargado con lo necesario
+    if(currentStartPos == sp && currentReadPowN == auxPowN) return;
+
+    currentStartPos = sp;
+    currentReadPowN = auxPowN;
     currentReadBlockSize = std::pow(2, currentReadPowN);
     QList<qreal> diskData = fakeDiskAudioData; // test
 
