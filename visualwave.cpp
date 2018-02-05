@@ -54,7 +54,7 @@ void VisualWave::readSoundFile()
 
     // create fake file data (disk data)
     int sr = 48000;
-    _fileFrameSize = sr * 60 * 2; // 10'? ver QList index size
+    _fileFrameSize = sr * 10; // 60 * 2; // 10'? ver QList index size
     for(unsigned long i = 0; i < _fileFrameSize; i++) {
         if(i % (sr/1) == 0) fakeDiskAudioData.append(1); else fakeDiskAudioData.append(0);
         // hay que comprobar que la unidad gráfica y los picos den información visual coherente
@@ -186,11 +186,13 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
     qreal y = this->linlin(bufferedData[0], 1, -1, 0, this->boundingRect().height());
     wavePath.moveTo(x, y);
 
-    int loopSize = range / currentReadBlockSize; // falta el remanente, da int dentro de _bufferFrameSize
+    int loopSize = range / currentReadBlockSize; // da int dentro de _bufferFrameSize
 
-    // no dibuja en scroll, siempre de 0 sp
+    //qDebug() << "buffer: " << bufferedData;
+    //qDebug() << "loopSize: " << loopSize;
+
     for(int i = 1; i < loopSize; i++) {
-        x = sp + i * _graphicUnit * currentReadBlockSize;
+        x = (sp + i * currentReadBlockSize) * _graphicUnit;
         y = this->linlin(bufferedData[i], 1, -1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
     }
@@ -223,43 +225,55 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
 
 void VisualWave::updateBufferedData(unsigned long sp, unsigned long range)
 {
-    qDebug() << "START OF UPDATE";
+    //qDebug() << "START OF UPDATE";
 
-    unsigned long auxBufferSize;
+    unsigned long auxReadSize;
     int auxPow2 = 0;
     while(auxPow2 < 32) {
-        auxBufferSize = _bufferFrameSize * std::pow(2, auxPow2);
-        if(range < auxBufferSize) break;
+        auxReadSize = _bufferFrameSize * std::pow(2, auxPow2);
+        if(range < auxReadSize) break;
         auxPow2 += 1;
     }
     currentReadPowN = auxPow2;
     currentReadBlockSize = std::pow(2, currentReadPowN);
     QList<qreal> diskData = fakeDiskAudioData; // test
 
+    /*
     qDebug() << "START POS: " << sp;
     qDebug() << "RANGE: " << range;
     qDebug() << "BLOCK LEVEL: " << currentReadPowN;
     qDebug() << "BLOCK SIZE: " << currentReadBlockSize;
     qDebug() << "READ SIZE: " << _bufferFrameSize * currentReadBlockSize;
     qDebug() << "DATA SIZE: " << diskData.size();
+    */
 
     for(int i = 0; i < _bufferFrameSize; i++) {
         unsigned long blockOffset = i * currentReadBlockSize;
         qreal peak, data;
 
-        if(sp + blockOffset + currentReadBlockSize < (unsigned long)diskData.size()) {
+        if(sp + blockOffset + currentReadBlockSize <= (unsigned long)diskData.size()) { // puede ser igual, porque es el tope, o no?
             peak = 0;
             for(unsigned long j = 0; j < currentReadBlockSize; j++) { // el rango de j es int
                 data = diskData[sp + blockOffset + j];
                 if(std::fabs(data) > std::fabs(peak)) peak = data;
             }
             bufferedData[i] = peak;
+        } else if(sp + blockOffset < (unsigned long)diskData.size()) {
+            // resto en la lectura del archivo
+            unsigned long remainderReadBlockSize = (unsigned long)diskData.size() - (sp + blockOffset);
+            peak = 0;
+            for(unsigned long j = 0; j < remainderReadBlockSize; j++) {
+                data = diskData[sp + blockOffset + j];
+                if(std::fabs(data) > std::fabs(peak)) peak = data;
+            }
+            bufferedData[i] = peak;
         } else {
-            // resto
+            // no hay más data para llenar el buffer
+            break;
         }
     }
 
-    qDebug() << "END OF UPDATE";
+    //qDebug() << "END OF UPDATE";
 }
 
 /*
