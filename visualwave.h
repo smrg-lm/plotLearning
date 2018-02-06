@@ -42,8 +42,6 @@ private:
     void updatePathItems();
     void updateSignalPath(unsigned long sp, unsigned long ep);
     void updateBufferedData(unsigned long sp, unsigned long range);
-    //void calcPeaks(unsigned long sp, unsigned long ep, const QList<qreal> &diskData);
-    void updatePeaksPath(int sp, int ep);
     void updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange);
 
     int obtainPointNumber(const QPointF &point);
