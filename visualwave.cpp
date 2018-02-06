@@ -192,11 +192,15 @@ void VisualWave::updatePathItems()
  *   zoom va en alejamiento se pueden reutilizar valores pico dentro
  *   del nuevo rango
  *
+ * - si el buffer es más grande por ambos lados se pueden reutilizar
+ *   valores al hacer scroll
+ *
  * - hay que calcular cómo dibuja al cambiar de escala para que no
  *   se generen saltos en la visualización
  * - permitir solo cambios de zoom en proporicones predeterminadas
  *   puede ser útil para la vizualización (cambio de escala) y el
- *   dibujo de los paths
+ *   dibujo de los paths, también predefinir hacia qué lado se
+ *   actualiza la información, ej. aparece desdes de derecha
  *
  * - la caché habría que calcularla en base al segundo como unidad
  *   y/o el tamaño del buffer como unidad de división, pero no sé
