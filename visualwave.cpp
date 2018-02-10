@@ -1,5 +1,6 @@
 #include "visualwave.h"
 #include "visualcontrolpoint.h"
+#include "visualbuffer.h"
 
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
@@ -10,6 +11,12 @@
 
 #include <QDebug>
 
+// sc linlin
+qreal linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax)
+{
+    // sc linlin: (this-inMin)/(inMax-inMin) * (outMax-outMin) + outMin;
+    return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
+}
 
 VisualWave::VisualWave(QGraphicsItem *parent)
     : VisualGroup(parent, QPointF(), QSizeF())
@@ -18,8 +25,6 @@ VisualWave::VisualWave(QGraphicsItem *parent)
 VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos)
     : VisualGroup(parent, pos, QSizeF())
 {
-    this->readSoundFile(); // TEST
-
     // QGraphicsPathItem (QPainterPath)
     QPen pen; pen.setWidth(0);
     controlPointsItem.setParentItem(this);
@@ -27,6 +32,18 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos)
     controlPointsItem.setBrush(Qt::gray);
     waveShapeItem.setParentItem(this);
     waveShapeItem.setPen(pen);
+
+    // TEST
+    // inicializa visual buffer y setea los parámetros gráficos
+    visualBuffer = new VisualBuffer();
+    visualBuffer->readSoundFile();
+    this->setSampleRate(visualBuffer->sampleRate());
+    this->setSize(QSizeF(visualBuffer->frameSize() * this->graphicUnit(), 2));
+}
+
+VisualWave::~VisualWave()
+{
+    delete visualBuffer;
 }
 
 void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -44,40 +61,6 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     // la vista por cualquier razón, no parece correcto, hay
     // que actualizar los path cuando sea necesario
     this->updatePathItems(); // confirmar que actualiza correctamente
-}
-
-void VisualWave::readSoundFile()
-{
-    std::random_device rd;
-    std::mt19937 e2(rd());
-    std::uniform_real_distribution<> dist(-1, 1);
-
-    // create fake file data (disk data)
-    int sr = 48000;
-    _fileFrameSize = sr * 60 * 2.5; // 10'? ver QList index size
-    for(unsigned long i = 0; i < _fileFrameSize; i++) {
-        if(i % (sr/10) == 0) fakeDiskAudioData.append(1); else fakeDiskAudioData.append(0);
-        //fakeDiskAudioData.append(dist(e2));
-    }
-
-    // create (fake) peak data (disk data)
-    for(unsigned long i = 0; i < _fileFrameSize / peaksBlockSize; i++) { // puede ignorar hasta las peakWindowSize-1 últimas muestras
-        qreal peak = 0;
-        for(int j = 0; j < peaksBlockSize; j++) {
-            if(std::fabs(fakeDiskAudioData[i*peaksBlockSize+j]) > std::fabs(peak)) {
-                peak = fakeDiskAudioData[i*peaksBlockSize+j];
-            }
-        }
-        fakeDiskPeaksData.append(peak);
-    }
-    _peaksFrameSize = fakeDiskPeaksData.size();
-
-    // init buffer data (precario, hay que calcular _bufferFrameSize)
-    for(int i = 0; i < _bufferFrameSize; i++)
-        bufferedData.append(Peak());
-
-    this->setSampleRate(sr);
-    this->setSize(QSizeF(_fileFrameSize * this->graphicUnit(), 2));
 }
 
 void VisualWave::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -113,12 +96,6 @@ void VisualWave::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     } else {
         VisualGroup::mouseReleaseEvent(event);
     }
-}
-
-qreal VisualWave::linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax)
-{
-    // sc linlin: (this-inMin)/(inMax-inMin) * (outMax-outMin) + outMin;
-    return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
 }
 
 QSizeF VisualWave::cufs(const QSizeF &size) const
@@ -207,6 +184,7 @@ void VisualWave::updatePathItems()
  *   y/o el tamaño del buffer como unidad de división, pero no sé
  *   exáctamente cómo por ahora
  * - pueden haber varios niveles de caché de tal manera que la cantidad
+
  *   de cálculos necesarios sea consntante dentro de cierto margen, la
  *   caché puede estar en memoria
  */
@@ -216,93 +194,27 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
     unsigned long range = ep - sp;
 
     // data
-    this->updateBufferedData(sp, range);
+    visualBuffer->update(sp, range);
 
     // graphics
+    RangeRingBuffer buffer = visualBuffer->buffer();
     QPainterPath wavePath;
-    qreal x = (sp + bufferedData[0].offset) * _graphicUnit;
-    qreal y = this->linlin(bufferedData[0].value, 1, -1, 0, this->boundingRect().height());
+    qreal x = (sp + buffer.getAt(0).offset) * _graphicUnit;
+    qreal y = linlin(buffer.getAt(0).value, 1, -1, 0, this->boundingRect().height());
     wavePath.moveTo(x, y);
 
-    int loopSize = range / currentReadBlockSize; // da int dentro de _bufferFrameSize
+    int loopSize = range / visualBuffer->visualBlock(); // da int dentro de _bufferFrameSize
 
-    //qDebug() << "buffer: " << bufferedData;
+    //qDebug() << "buffer: " << buffer;
     //qDebug() << "loopSize: " << loopSize;
 
     for(int i = 1; i < loopSize; i++) {
-        x = (sp + i * currentReadBlockSize + bufferedData[i].offset) * _graphicUnit;
-        y = this->linlin(bufferedData[i].value, 1, -1, 0, this->boundingRect().height());
+        x = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit;
+        y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
     }
 
     waveShapeItem.setPath(wavePath);
-}
-
-void VisualWave::updateBufferedData(unsigned long sp, unsigned long range)
-{
-    //qDebug() << "START OF UPDATE";
-
-    unsigned long auxReadSize;
-    int auxPowN = 0;
-    while(auxPowN < 32) {
-        auxReadSize = _bufferFrameSize * std::pow(2, auxPowN);
-        if(range < auxReadSize) break;
-        auxPowN += 1;
-    }
-
-    // no necesita actualizar, el buffer está cargado con lo necesario
-    if(currentStartPos == sp && currentReadPowN == auxPowN) return; // creo que debería checkear el rango también, puede cambiar el tamaño de la ventana
-
-    currentStartPos = sp;
-    currentReadPowN = auxPowN;
-    currentReadBlockSize = std::pow(2, currentReadPowN);
-    QList<qreal> diskData = fakeDiskAudioData; // test
-
-    /*
-    // no borrar, sirve para testear cómo y cuándo actualiza
-    qDebug() << "START POS: " << sp;
-    qDebug() << "RANGE: " << range;
-    qDebug() << "BLOCK LEVEL: " << currentReadPowN;
-    qDebug() << "BLOCK SIZE: " << currentReadBlockSize;
-    qDebug() << "READ SIZE: " << _bufferFrameSize * currentReadBlockSize;
-    qDebug() << "DATA SIZE: " << diskData.size();
-    */
-
-    for(int i = 0; i < _bufferFrameSize; i++) {
-        unsigned long blockOffset = i * currentReadBlockSize;
-        qreal offset, peak, data;
-
-        if(sp + blockOffset + currentReadBlockSize <= (unsigned long)diskData.size()) { // puede ser igual, porque es el tope, o no?
-            offset = 0; peak = 0;
-            for(unsigned long j = 0; j < currentReadBlockSize; j++) { // el rango de j es int
-                data = diskData[sp + blockOffset + j];
-                if(std::fabs(data) > std::fabs(peak)) {
-                    offset = j;
-                    peak = data;
-                }
-            }
-            bufferedData[i].offset = offset;
-            bufferedData[i].value = peak;
-        } else if(sp + blockOffset < (unsigned long)diskData.size()) {
-            // resto en la lectura del archivo
-            unsigned long remainderReadBlockSize = (unsigned long)diskData.size() - (sp + blockOffset);
-            offset = 0; peak = 0;
-            for(unsigned long j = 0; j < remainderReadBlockSize; j++) {
-                data = diskData[sp + blockOffset + j];
-                if(std::fabs(data) > std::fabs(peak)) {
-                    offset = j;
-                    peak = data;
-                }
-            }
-            bufferedData[i].offset = offset;
-            bufferedData[i].value = peak;
-        } else {
-            // no hay más data para llenar el buffer
-            break;
-        }
-    }
-
-    //qDebug() << "END OF UPDATE";
 }
 
 void VisualWave::updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange)
@@ -317,15 +229,16 @@ void VisualWave::updateControlPointsPath(unsigned long sp, unsigned long ep, qre
         return;
     }
 
-    qreal x = (sp + bufferedData[sp].offset) * _graphicUnit;
-    qreal y = this->linlin(bufferedData[sp].value, 1, -1, 0, this->boundingRect().height());
+    RangeRingBuffer buffer = visualBuffer->buffer();
+    qreal x = (sp + buffer.getAt(sp).offset) * _graphicUnit;
+    qreal y = linlin(buffer.getAt(sp).value, 1, -1, 0, this->boundingRect().height());
 
     controlsPath.addEllipse(QPointF(x, y),
                             controlPointSize.width(),
                             controlPointSize.height());
     for(unsigned long i = sp + 1; i < ep; i++) {
-        x = (i + bufferedData[i].offset) * _graphicUnit;
-        y = this->linlin(bufferedData[i].value, 1, -1, 0, this->boundingRect().height());
+        x = (i + buffer.getAt(i).offset) * _graphicUnit;
+        y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
         controlsPath.addEllipse(QPointF(x, y),
                                 controlPointSize.width(),
                                 controlPointSize.height());
@@ -356,8 +269,8 @@ void VisualWave::editPoint(const QPointF &point)
      * enable tooltip showing values in rt
      */
     if(point.y() > this->boundingRect().height() || point.y() < 0) return;
-    qreal newValue = this->linlin(point.y(), 0, this->boundingRect().height(), 1, -1);
+    qreal newValue = linlin(point.y(), 0, this->boundingRect().height(), 1, -1);
     if(newValue > 1) newValue = 1; if(newValue < -1) newValue = -1;
-    //bufferedData[lastUpdateStartPos + selectedPointNumber] = this->linlin(point.y(), 0, this->boundingRect().height(), 1, -1);
+    //bufferedData[lastUpdateStartPos + selectedPointNumber] = linlin(point.y(), 0, this->boundingRect().height(), 1, -1);
     this->update();
 }

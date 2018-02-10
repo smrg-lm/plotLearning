@@ -1,5 +1,7 @@
 #include "visualbuffer.h"
 
+#include <QDebug>
+
 // it happens to be sc_mod
 int negmod(int a, int b) {
     a = a % b;
@@ -71,6 +73,34 @@ VisualBuffer::~VisualBuffer()
     delete _buffer;
 }
 
+void VisualBuffer::readSoundFile()
+{
+    std::random_device rd;
+    std::mt19937 e2(rd());
+    std::uniform_real_distribution<> dist(-1, 1);
+
+    // create fake file data (disk data)
+    int sr = 48000;
+    unsigned long fileFrameSize = sr * 60 * 2.5; // 10'? ver QList index size
+
+    for(unsigned long i = 0; i < fileFrameSize; i++) {
+        if(i % (sr/10) == 0) diskData.append(1); else diskData.append(0.);
+        //diskData.append(dist(e2));
+    }
+    _frameSize = diskData.size();
+
+    // create (fake) peak data (disk data)
+    for(unsigned long i = 0; i < fileFrameSize / diskPeaksBlock; i++) { // puede ignorar hasta las peakWindowSize-1 últimas muestras
+        qreal peak = 0;
+        for(int j = 0; j < diskPeaksBlock; j++) {
+            if(std::fabs(diskData[i*diskPeaksBlock+j]) > std::fabs(peak)) {
+                peak = diskData[i*diskPeaksBlock+j];
+            }
+        }
+        diskPeaks.append(peak);
+    }
+}
+
 void VisualBuffer::update(unsigned long sp, unsigned long range)
 {
     unsigned long auxReadSize;
@@ -86,53 +116,21 @@ void VisualBuffer::update(unsigned long sp, unsigned long range)
             && visualRange == range
             && visualLevel == auxLevel) return;
 
-    // range change
-    if(sp != visualStart) {
-        previousStart = visualStart;
-        visualStart = sp;
-    }
-    if(range != visualRange) {
-        previousRange = visualRange;
-        visualRange = range;
-    }
+    previousStart = visualStart;
+    visualStart = sp;
 
-    // level change
-    if(auxLevel != visualLevel) {
-        previousLevel = visualLevel;
-        previousBlock = visualBlock;
-        visualLevel = auxLevel;
-        visualBlock = std::pow(2, visualLevel);
-    }
+    previousRange = visualRange;
+    visualRange = range;
 
-    // shared range (para scroll) // CHEQUEAR SI CAMBIÓ EL RANGO PERO NO EL NIVEL, y ANTES DE LLAMAR
-    unsigned long visualEnd = visualStart + visualRange;
-    unsigned long previousEnd = previousStart + previousRange;
-    sharedStart = -1; //sharedRange = 0;
-    if(previousStart >= visualStart && previousStart < visualEnd) {
-        // el nuevo rango se movió hacia la hizquierda o saltó
-        if(previousEnd <= visualEnd) {
-            // segmento incluido en su totalidad
-            sharedStart = previousStart;
-            sharedRange = previousRange;
-        } else {
-            // segmento incluido hacia el final
-            sharedStart = previousStart;
-            sharedRange = visualEnd - previousStart;
-        }
-    } else {
-        // el nuevo rango se movió hacia la derecha o saltó
-        if(previousEnd > visualStart && previousEnd <= visualEnd) {
-            // segmento incluido hacia el principio
-            sharedStart = visualStart;
-            sharedRange = previousEnd - visualStart;
-        }
-    }
+    previousLevel = visualLevel;
+    previousBlock = _visualBlock;
+    visualLevel = auxLevel;
+    _visualBlock = std::pow(2, visualLevel);
 
-    /*
-     * Sería algo tal vez importante que el scroll sea siempre
-     * por múltiplos del bloque actual? Pero esto dependería
-     * de la vista
-     */
+    if(_visualBlock != previousBlock) // llena lo necesario por única vez, cuando cambia el rango, qué pasa con el scroll?
+        this->updateFill();
+    else if(visualRange == previousRange) // supuestamente, si no cambió el nivel no cambió el rango, pero puede fallar por la resolución gráfica?
+        this->updateScroll(); // OK, NO ANDA, ERA DE ESPERARSE... :-/
 }
 
 Peak VisualBuffer::calcPeak(unsigned long startOffset, unsigned long blockSize)
@@ -157,16 +155,17 @@ Peak VisualBuffer::calcPeak(unsigned long startOffset, unsigned long blockSize)
 void VisualBuffer::updateFill()
 {
     // cambió el nivel
+    qDebug() << "updateFill() _visualBlock = " << _visualBlock; // medir cpu para calcular caché de picos
 
     unsigned long blockOffset;
     Peak peak;
 
     for(int i = 0; i < _size; i++) {
-        blockOffset = i * visualBlock;
+        blockOffset = i * _visualBlock;
 
-        if(visualStart + blockOffset + visualBlock <= (unsigned long)diskData.size()) {
+        if(visualStart + blockOffset + _visualBlock <= (unsigned long)diskData.size()) {
 
-            peak = this->calcPeak(visualStart + blockOffset, visualBlock);
+            peak = this->calcPeak(visualStart + blockOffset, _visualBlock);
             _buffer->setAt(i, peak.offset, peak.value);
 
         } else if(visualStart + blockOffset < (unsigned long)diskData.size()) {
@@ -177,7 +176,10 @@ void VisualBuffer::updateFill()
 
         } else {
 
-            // no hay más data para llenar el buffer
+            /*
+             * no hay más data para llenar el buffer
+             * el rango visual es más corto que el buffer
+             */
             break;
 
         }
@@ -186,9 +188,16 @@ void VisualBuffer::updateFill()
 
 void VisualBuffer::updateScroll()
 {
-    // cambió de posición el rango pero no cambiaron ni el nivel ni el largo del rango
-    // left/right add "mueven" la posición del rango
-    // el buffer está completo pero puede no estar lleno si está al final del archivo, ver
+    /*
+     * - cambió de posición el rango pero no cambiaron ni el nivel
+     *   ni el largo del rango
+     * - left/right add "mueven" la posición del rango
+     * - el buffer está completo pero puede no estar lleno si está
+     *   al final del archivo, ver
+     */
+
+    qDebug() << "updateScroll() visualStart = " << visualStart
+             << "previousStart = " << previousStart;
 
     unsigned long range;
     unsigned long blockOffset;
@@ -197,9 +206,11 @@ void VisualBuffer::updateScroll()
     if(previousStart > visualStart){
         range = previousStart - visualStart;
 
+        qDebug() << "leftAdd, range = " << range;
+
         for(unsigned long i = 1; i <= range; i++) {
-            blockOffset = i * visualBlock;
-            peak = this->calcPeak(previousStart - blockOffset, visualBlock);
+            blockOffset = i * _visualBlock;
+            peak = this->calcPeak(previousStart - blockOffset, _visualBlock);
             _buffer->leftAdd(peak.offset, peak.value);
         }
 
@@ -207,10 +218,12 @@ void VisualBuffer::updateScroll()
         range = visualStart - previousStart;
         unsigned long previousEnd = previousStart + previousRange;
 
+        qDebug() << "rightAdd, range = " << range;
+
         for(unsigned long i = 0; i < range; i++) {
-            if(previousEnd + i >= diskData.size()) break; // no hay más para escrolear, comprobar
-            blockOffset = i * visualBlock;
-            peak = this->calcPeak(previousEnd + blockOffset, visualBlock);
+            if(previousEnd + i >= (unsigned long)diskData.size()) break; // no hay más para escrolear, comprobar
+            blockOffset = i * _visualBlock;
+            peak = this->calcPeak(previousEnd + blockOffset, _visualBlock);
             _buffer->rightAdd(peak.offset, peak.value);
         }
 
@@ -219,12 +232,19 @@ void VisualBuffer::updateScroll()
 
 void VisualBuffer::updateZoomOut()
 {
-    // el nuevo rango contiene al rango previo
-    // pero puede exceder por ambos lados o solo por uno
+    /*
+     * - el nuevo rango contiene al rango previo
+     * - pero puede exceder por ambos lados o solo por uno
+     * - el nivel tiene que cambiar, en este caso es posible
+     *   optimizar, aunque es más complicado, pero no para
+     *   zoom in, y eso produce procesamiento asimétrico
+     */
 }
 
 void VisualBuffer::updateZoomIn()
 {
-    // el rango nuevo es un subconjunto del rango previo
-    // pero puede coincidir en el principio o el fin del rango anterior
+    /*
+     * - el rango nuevo es un subconjunto del rango previo
+     * - pero puede coincidir en el principio o el fin del rango anterior
+     */
 }

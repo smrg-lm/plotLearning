@@ -38,16 +38,34 @@ public:
     VisualBuffer(int size = 1024);
     ~VisualBuffer();
 
-    // access interface...
+    // file access interface...
+    void readSoundFile();
+    int sampleRate() { return _sampleRate; }
+    unsigned long frameSize() { return _frameSize; }
 
-    void update(unsigned long sp, unsigned long range);
+    // buffer access interface...
     const RangeRingBuffer &buffer() const { return *_buffer; }
     int size() { return _size; }
+    unsigned long visualBlock() { return _visualBlock; }
+
+    void update(unsigned long sp, unsigned long range);
 
 private:
     Peak calcPeak(unsigned long startOffset, unsigned long blockSize);
     void updateFill();
     void updateScroll();
+
+    // maybe not useful, not implemented
+    void updateZoomOut();
+    void updateZoomIn();
+
+    // TEST
+    QList<qreal> diskData;
+    QList<qreal> diskPeaks;
+    int diskPeaksBlock = 64;
+
+    int _sampleRate = 48000;
+    unsigned long _frameSize;
 
     RangeRingBuffer *_buffer;
     int _size;
@@ -55,19 +73,13 @@ private:
     // estas inicializaciones no deberían estar, creo
     unsigned long visualStart = -1;
     unsigned long visualRange = 0;
-    unsigned long visualBlock = -1;
+    unsigned long _visualBlock = -1;
     int visualLevel = -1;
 
     unsigned long previousStart = -1;
     unsigned long previousRange = 0;
-    unsigned long previousBlock = -1;
-    int previousLevel = -1;
-
-    unsigned long sharedStart = -1;
-    unsigned long sharedRange = 0;
-
-    // TEST
-    QList<qreal> diskData;
+    unsigned long previousBlock = -1; // not used
+    int previousLevel = -1; // not used
 };
 
 #endif // VISUALBUFFER_H

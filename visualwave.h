@@ -4,6 +4,7 @@
 #include "visualgroup.h"
 
 class ControlPoint;
+class VisualBuffer;
 
 // VisualSignal?
 class VisualWave : public VisualGroup
@@ -16,6 +17,7 @@ public:
     // y 2 (rango bipolar) para height y se escala/transforma.
     VisualWave(QGraphicsItem *parent);
     VisualWave(QGraphicsItem *parent, const QPointF &pos);
+    ~VisualWave();
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0) override;
@@ -36,12 +38,10 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
-    qreal linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax);
     QSizeF cufs(const QSizeF &size) const;
 
     void updatePathItems();
     void updateSignalPath(unsigned long sp, unsigned long ep);
-    void updateBufferedData(unsigned long sp, unsigned long range);
     void updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange);
 
     int obtainPointNumber(const QPointF &point);
@@ -58,32 +58,7 @@ private:
     unsigned long lastUpdateStartPos = 1;
     unsigned long lastUpdateEndPos = 0; // invalid pos, will be false (seek another way)
 
-    // this could be another class for composition
-    unsigned long fileFrameSize() { return _fileFrameSize; }
-    unsigned long peaksFrameSize() { return _peaksFrameSize; }
-    int bufferSize() { return _bufferFrameSize; } // in memory buffer
-    void setBufferSize(int value) { _bufferFrameSize = value; } // TEST no memory management
-    //QList<qreal>??(void) readFromDisk(); // params, fills in memory buffer
-
-    QList<qreal> fakeDiskAudioData; // TEST
-    unsigned long _fileFrameSize = 0;
-    QList<qreal> fakeDiskPeaksData; // TEST
-    int peaksBlockSize = 64;
-    unsigned long _peaksFrameSize;
-
-    struct Peak {
-        Peak(int offset = 0, qreal value = 0)
-            : offset(offset), value(value) {}
-        int offset;
-        qreal value;
-    };
-
-    QList<Peak> bufferedData; // luego tiene que ser un ring buffer?
-    int _bufferFrameSize = 1024; // i.e. 1080, depende de la resolución del monitor por algún factor
-    unsigned long currentReadBlockSize = -1;
-    unsigned long currentStartPos = -1;
-    int currentReadPowN = -1;
-
+    VisualBuffer *visualBuffer;
     qreal _sampleRate = 48000;
     qreal _graphicUnit = 1. / _sampleRate; // can't be zero, by now
 };
