@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     visualwave.cpp \
     visualbrickwall.cpp \
     visualcontrolpoint.cpp \
-    baseview.cpp
+    baseview.cpp \
+    visualbuffer.cpp
 
 HEADERS  += \
     workarea.h \
@@ -37,4 +38,5 @@ HEADERS  += \
     visualwave.h \
     visualbrickwall.h \
     visualcontrolpoint.h \
-    baseview.h
+    baseview.h \
+    visualbuffer.h

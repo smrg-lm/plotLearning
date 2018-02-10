@@ -190,7 +190,8 @@ void VisualWave::updatePathItems()
  *
  * - si se puede guardar el buffer inmediato inferior para cuando el
  *   zoom va en alejamiento se pueden reutilizar valores pico dentro
- *   del nuevo rango
+ *   del nuevo rango. Esto no parece ser útil, es muy complicado y
+ *   solo se puede hacer en dirección ascendente.
  *
  * - si el buffer es más grande por ambos lados se pueden reutilizar
  *   valores al hacer scroll
@@ -205,6 +206,9 @@ void VisualWave::updatePathItems()
  * - la caché habría que calcularla en base al segundo como unidad
  *   y/o el tamaño del buffer como unidad de división, pero no sé
  *   exáctamente cómo por ahora
+ * - pueden haber varios niveles de caché de tal manera que la cantidad
+ *   de cálculos necesarios sea consntante dentro de cierto margen, la
+ *   caché puede estar en memoria
  */
 
 void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
@@ -247,7 +251,7 @@ void VisualWave::updateBufferedData(unsigned long sp, unsigned long range)
     }
 
     // no necesita actualizar, el buffer está cargado con lo necesario
-    if(currentStartPos == sp && currentReadPowN == auxPowN) return;
+    if(currentStartPos == sp && currentReadPowN == auxPowN) return; // creo que debería checkear el rango también, puede cambiar el tamaño de la ventana
 
     currentStartPos = sp;
     currentReadPowN = auxPowN;
