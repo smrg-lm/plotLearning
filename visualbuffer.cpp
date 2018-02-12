@@ -89,16 +89,7 @@ void VisualBuffer::readSoundFile()
     }
     _frameSize = diskData.size();
 
-    // create (fake) peak data (disk data)
-    for(unsigned long i = 0; i < fileFrameSize / diskPeaksBlock; i++) { // puede ignorar hasta las peakWindowSize-1 últimas muestras
-        qreal peak = 0;
-        for(int j = 0; j < diskPeaksBlock; j++) {
-            if(std::fabs(diskData[i*diskPeaksBlock+j]) > std::fabs(peak)) {
-                peak = diskData[i*diskPeaksBlock+j];
-            }
-        }
-        diskPeaks.append(peak);
-    }
+    this->buildCache();
 }
 
 void VisualBuffer::update(unsigned long sp, unsigned long range)
@@ -159,6 +150,103 @@ Peak VisualBuffer::calcPeak(unsigned long startOffset, unsigned long blockSize)
     }
 
     return Peak(offset, peak);
+}
+
+// repite porque no se me ocurre cómo hacer fácilmente que la función calcPeak sea genérica
+Peak VisualBuffer::calcCachePeak(unsigned long startOffset, unsigned long blockSize,
+                                const QList<Peak> & cacheData)
+{
+    unsigned long startBlockOffset = startOffset - startOffset % blockSize;
+
+    if(startBlockOffset + blockSize <= (unsigned long)cacheData.size()) {
+        // ok, blockSize = blockSize...
+    } else if(startBlockOffset < (unsigned long)cacheData.size()) {
+        blockSize = (unsigned long)cacheData.size() - startBlockOffset; // remainder
+    } else {
+        throw "VisualBuffer: Error building cache, index out of range!";
+    }
+
+    int offset = 0;
+    qreal peak = 0;
+    Peak data;
+
+    for(unsigned long i = 0; i < blockSize; i++) { // el rango de i es int
+        data = cacheData[startBlockOffset + i]; // TEST
+        if(std::fabs(data.value) > std::fabs(peak)) {
+            offset = i * diskCacheBlock + data.offset; // confirmar
+            peak = data.value;
+        }
+    }
+
+    /*
+     * desde afuera, offset en muestras es dentro del bloque anterior
+     * según el nivel:
+     * en diskCache[0][n] es n * diskCacheBlock + offset
+     * en diskCache[1][n] es n * pow(diskCacheBlock, 2) + offset
+     * en diskCache[2][n] es n * pow(diskCacheBlock, 3) + offset
+     * ...
+     * en diskCache[l][n] es n * pow(diskCacheBlock, l+1) + offset
+     * offset es int
+     * confirmar
+     */
+
+    return Peak(offset, peak);
+}
+
+void VisualBuffer::buildCache()
+{
+    diskCache.append(QList<Peak>());
+    for(unsigned long i = 0; i < (unsigned long)diskData.size(); i += diskCacheBlock) {
+        diskCache[0].append( this->calcPeak(i, diskCacheBlock) );
+    }
+
+    for(int l = 1; l <= 2; l++) {
+        diskCache.append(QList<Peak>());
+        for(unsigned long i = 0; i < (unsigned long)diskCache[l-1].size(); i += diskCacheBlock) {
+            diskCache[l].append( this->calcCachePeak(i, diskCacheBlock, diskCache[l-1]) );
+        }
+    }
+
+    qDebug() << "diskCache[0].size(): " << diskCache[0].size();
+    qDebug() << "diskCache[1].size(): " << diskCache[1].size();
+    qDebug() << "diskCache[2].size(): " << diskCache[2].size();
+
+    // para 48000 / 10 == 4800
+    qDebug() << "diskCache[0][300].offset: " << diskCache[0][300].offset;
+    qDebug() << "diskCache[0][300].value: " << diskCache[0][300].value; // 4800 / 16 == 300;
+    qDebug() << "diskCache[1][18].offset " << diskCache[1][18].offset;
+    qDebug() << "diskCache[1][18].value " << diskCache[1][18].value; // 300 / 16 == 18.75
+    qDebug() << "diskCache[2][1].offset: " << diskCache[2][1].offset;
+    qDebug() << "diskCache[2][1].value: " << diskCache[2][1].value; // 18.75 / 16 == 1.171875
+
+    // *** los offset pueden estar mal para la función VisualWave::updateSignalPath, ver
+    // *** el offset tiene que ser int, es dentro del bloque a cada nivel
+
+    /*
+     * 1024   -> b1
+     * 2048   -> 2
+     * 4096   -> 4
+     * 8192   -> 8
+     * 16384  -> 16  -> b1(16)
+     * 32768  -> 32  -> 2
+     * 65536  -> 64  -> 4
+     * 131072 -> 128 -> 8
+     * 262144 -> 256 -> 16 -> b1(256)
+     *
+     * i.e. 48000 / 16 == 3000
+     *      3000 / 16 == 187.5
+     *      187.5 / 16 == 11.7
+     *      11.7 * 60 * 60 == 42120
+     *
+     * i.e. 3000 * 8 * 60**2 / 1024**2 == 82.3974609375
+     *      187.5 * 8 * 60**2 / 1024**2 == 5.14984130859375
+     *      11.7 * 8 * 60**2 / 1024**2 == 0.32135009765625
+     *
+     * i.e. 87.86865234375M por una hora, se puede optimizar
+     * bajando la resolución y subiendo diskCacheBlock, afectaría
+     * solamente lo gráfico en zoom lejano, pero lo pensé como
+     * pares int-float que es lo más fácil
+     */
 }
 
 void VisualBuffer::updateFill()

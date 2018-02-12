@@ -214,7 +214,7 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
     //qDebug() << "loopSize: " << loopSize;
 
     for(int i = 1; i < loopSize; i++) {
-        x = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit;
+        x = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit; // esto queda bien con el cambio en calcPeak y la idea calcPeakPeak?
         y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
         wavePath.lineTo(x, y);
     }

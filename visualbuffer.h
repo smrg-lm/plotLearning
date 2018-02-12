@@ -7,6 +7,8 @@ struct Peak
 {
     Peak(int offset = 0, qreal value = 0)
         : offset(offset), value(value) {}
+    Peak(const Peak &p)
+        : offset(p.offset), value(p.value) {}
     int offset;
     qreal value;
 };
@@ -52,6 +54,9 @@ public:
 
 private:
     Peak calcPeak(unsigned long startOffset, unsigned long blockSize);
+    Peak calcCachePeak(unsigned long startOffset, unsigned long blockSize,
+                      const QList<Peak> & cacheData);
+    void buildCache();
     void updateFill();
     void updateScroll();
 
@@ -61,8 +66,10 @@ private:
 
     // TEST
     QList<qreal> diskData;
-    QList<qreal> diskPeaks;
-    int diskPeaksBlock = 64;
+
+    QList<QList<Peak>> diskCache;
+    int diskCacheLevels = 3;
+    int diskCacheBlock = 16;
 
     int _sampleRate = 48000;
     unsigned long _frameSize;
