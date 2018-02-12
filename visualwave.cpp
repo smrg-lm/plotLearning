@@ -134,8 +134,13 @@ void VisualWave::updatePathItems()
     // usando los mismos recursos
 
     QRectF vr = this->visibleRect();
+    //if(vr.isEmpty()) return; // mantiene el último path pero perjudica el uso de más de una vista
+
     qreal visualStartPos = this->floorQuant(vr.left(), _graphicUnit); // esto puede quedar afuera de lo visual, pero no es <0
+    //if(visualStartPos * _graphicUnit < vr.left()) visualStartPos += _graphicUnit; // pone dentro de lo visual, pero ver si es necesario, y la relación siguiente
+
     qreal visualEndPos = visualStartPos + this->floorQuant(vr.width(), _graphicUnit);
+
     unsigned long startPos = (unsigned long)(visualStartPos / _graphicUnit);
     unsigned long endPos = (unsigned long)(visualEndPos / _graphicUnit);
 

@@ -127,22 +127,31 @@ void VisualBuffer::update(unsigned long sp, unsigned long range)
     visualLevel = auxLevel;
     _visualBlock = std::pow(2, visualLevel);
 
-    if(_visualBlock != previousBlock) // llena lo necesario por única vez, cuando cambia el rango, qué pasa con el scroll?
+    if(_visualBlock != previousBlock)
         this->updateFill();
-    else if(visualRange == previousRange) // supuestamente, si no cambió el nivel no cambió el rango, pero puede fallar por la resolución gráfica?
-        this->updateScroll(); // OK, NO ANDA, ERA DE ESPERARSE... :-/
+    else
+        this->updateScroll();
 }
 
 Peak VisualBuffer::calcPeak(unsigned long startOffset, unsigned long blockSize)
 {
+    // los bloques en el disco son siempre los mismos a distintos blockSize
+    unsigned long startBlockOffset = startOffset - startOffset % blockSize;
+
+    if(startBlockOffset + blockSize <= (unsigned long)diskData.size()) {
+        // ok, blockSize = blockSize...
+    } else if(startBlockOffset < (unsigned long)diskData.size()) {
+        blockSize = (unsigned long)diskData.size() - startBlockOffset; // remainder
+    } else {
+        return Peak(); // out of range
+    }
+
     int offset = 0;
     qreal peak = 0;
     qreal data;
 
     for(unsigned long i = 0; i < blockSize; i++) { // el rango de i es int
-
-        data = diskData[startOffset + i]; // TEST
-
+        data = diskData[startBlockOffset + i]; // TEST
         if(std::fabs(data) > std::fabs(peak)) {
             offset = i;
             peak = data;
@@ -154,59 +163,35 @@ Peak VisualBuffer::calcPeak(unsigned long startOffset, unsigned long blockSize)
 
 void VisualBuffer::updateFill()
 {
-    // cambió el nivel
-    qDebug() << "updateFill() _visualBlock = " << _visualBlock; // medir cpu para calcular caché de picos
+    /*
+     * cambia el nivel, itera sobre _size bloques
+     */
 
     unsigned long blockOffset;
     Peak peak;
 
     for(int i = 0; i < _size; i++) {
         blockOffset = i * _visualBlock;
-
-        if(visualStart + blockOffset + _visualBlock <= (unsigned long)diskData.size()) {
-
-            peak = this->calcPeak(visualStart + blockOffset, _visualBlock);
-            _buffer->setAt(i, peak.offset, peak.value);
-
-        } else if(visualStart + blockOffset < (unsigned long)diskData.size()) {
-            unsigned long remainderBlockSize = (unsigned long)diskData.size() - (visualStart + blockOffset);
-
-            peak = this->calcPeak(visualStart + blockOffset, remainderBlockSize);
-            _buffer->setAt(i, peak.offset, peak.value);
-
-        } else {
-
-            /*
-             * no hay más data para llenar el buffer
-             * el rango visual es más corto que el buffer
-             */
-            break;
-
-        }
+        peak = this->calcPeak(visualStart + blockOffset, _visualBlock);
+        _buffer->setAt(i, peak.offset, peak.value);
     }
 }
 
 void VisualBuffer::updateScroll()
 {
     /*
-     * - cambió de posición el rango pero no cambiaron ni el nivel
-     *   ni el largo del rango
-     * - left/right add "mueven" la posición del rango
-     * - el buffer está completo pero puede no estar lleno si está
-     *   al final del archivo, ver
+     * no cambia el nivel, _size mide bloques, fill llena el
+     * buffer por bloques iterando sobre size, esta función
+     * tiene que convertir visualStart a bloques o _size a
+     * muestras, range es en bloques
      */
-
-    qDebug() << "updateScroll() visualStart = " << visualStart
-             << "previousStart = " << previousStart;
 
     unsigned long range;
     unsigned long blockOffset;
     Peak peak;
 
-    if(previousStart > visualStart){
-        range = previousStart - visualStart;
-
-        qDebug() << "leftAdd, range = " << range;
+    if(previousStart > visualStart) {
+        range = previousStart / _visualBlock - visualStart / _visualBlock;
 
         for(unsigned long i = 1; i <= range; i++) {
             blockOffset = i * _visualBlock;
@@ -215,13 +200,10 @@ void VisualBuffer::updateScroll()
         }
 
     } else {
-        range = visualStart - previousStart;
-        unsigned long previousEnd = previousStart + previousRange;
-
-        qDebug() << "rightAdd, range = " << range;
+        range = visualStart / _visualBlock - previousStart / _visualBlock;
+        unsigned long previousEnd = previousStart + _size * _visualBlock;
 
         for(unsigned long i = 0; i < range; i++) {
-            if(previousEnd + i >= (unsigned long)diskData.size()) break; // no hay más para escrolear, comprobar
             blockOffset = i * _visualBlock;
             peak = this->calcPeak(previousEnd + blockOffset, _visualBlock);
             _buffer->rightAdd(peak.offset, peak.value);
@@ -246,5 +228,6 @@ void VisualBuffer::updateZoomIn()
     /*
      * - el rango nuevo es un subconjunto del rango previo
      * - pero puede coincidir en el principio o el fin del rango anterior
+     * - no veo optimización posible para este caso
      */
 }
