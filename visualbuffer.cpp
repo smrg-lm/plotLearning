@@ -84,8 +84,8 @@ void VisualBuffer::readSoundFile()
     unsigned long fileFrameSize = sr * 60 * 2.5; // 10'? ver QList index size
 
     for(unsigned long i = 0; i < fileFrameSize; i++) {
-        if(i % (sr/10) == 0) diskData.append(1); else diskData.append(0.);
-        //diskData.append(dist(e2));
+        //if(i % (sr/10) == 0) diskData.append(1); else diskData.append(0.);
+        diskData.append(dist(e2));
     }
     _frameSize = diskData.size();
 

@@ -24,7 +24,7 @@ PlotWidget::PlotWidget(QWidget *parent)
 
     // sync horizontal scroll
     _horizontalScrollView = new ScrollView();
-    _horizontalScrollView->ruleArea()->setSize(QSizeF(200, 25)); // depende de wa
+    _horizontalScrollView->ruleArea()->setSize(QSizeF(500, 25)); // depende de wa
     _layout->addWidget(_horizontalScrollView, 0, 0);
 
     connect(_horizontalScrollView->horizontalScrollBar(), SIGNAL(valueChanged(int)),

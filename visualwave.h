@@ -42,12 +42,15 @@ private:
 
     void updatePathItems();
     void updateSignalPath(unsigned long sp, unsigned long ep);
+    void linearPath(unsigned long sp, unsigned long range);
+    void stepsPath(unsigned long sp, unsigned long range);
+    void barsPath(unsigned long sp, unsigned long range);
     void updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange);
 
     int obtainPointNumber(const QPointF &point);
     void editPoint(const QPointF &point);
 
-    QGraphicsPathItem waveShapeItem;
+    QGraphicsPathItem signalItem;
     //QGraphicsPathItem wavePeaksItem;
     QGraphicsPathItem controlPointsItem;
 
@@ -73,7 +76,9 @@ private:
  * qslider puede ser mejor solución.
  * PERO: si la unidad es el segundo hay
  * 32767 / 60 ^ 2 ~ 9.1 horas independientemente
- * de la frecuencia de muestreo.
+ * de la frecuencia de muestreo. Igualmente,
+ * QGraphicsScene/View no tiene tanta resolución
+ * hacia abajo.
  *
  * El rango vertical se tiene que poder escalar
  * para igualar distintos rangos de datos, tal
@@ -85,11 +90,12 @@ private:
  * By sample (with tooltip) vs drawing
  *
  * Plotter modes:
- * linear (default)
+ * linear (default) ok (test)
+ * steps ok (test)
+ * bars not ok (test)
  * points (could be non editable edit points)
  * plines (points an lines)
- * levels (just the level line by sample not bars
- * steps
+ * levels (just the level line by sample, not bars
  *
  * Múltiples señales en un mismo cajón se usa para
  * la visualización del tracking de armónicos
