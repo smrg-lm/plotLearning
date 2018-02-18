@@ -45,6 +45,7 @@ private:
     void linearPath(unsigned long sp, unsigned long range);
     void stepsPath(unsigned long sp, unsigned long range);
     void levelsPath(unsigned long sp, unsigned long range);
+    void sticksPath(unsigned long sp, unsigned long range);
     void barsPath(unsigned long sp, unsigned long range);
     void updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange);
 
@@ -93,11 +94,11 @@ private:
  * Plotter modes:
  * linear (default) ok (test)
  * steps ok (test)
+ * sticks not ok (test)
  * bars not ok (test)
  * levels ok (test) (just the level line by sample, not bars
  * points (could be non editable edit points)
  * plines (points an lines)
- * discrete sticks always from zero
  *
  * Múltiples señales en un mismo cajón se usa para
  * la visualización del tracking de armónicos

@@ -33,6 +33,8 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos)
     signalItem.setParentItem(this);
     signalItem.setPen(pen);
     signalItem.setBrush(Qt::black);
+    //signalItem.setCacheMode(QGraphicsItem::ItemCoordinateCache, QSize(500, 500)); // no escala a valores menores que 1?
+    // no será la escala el problema? (puede que no)
 
     // TEST
     // inicializa visual buffer y setea los parámetros gráficos
@@ -206,7 +208,8 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
     //this->linearPath(sp, range);
     //this->stepsPath(sp, range);
     //this->levelsPath(sp, range);
-    this->barsPath(sp, range);
+    //this->barsPath(sp, range);
+    this->sticksPath(sp, range);
 }
 
 void VisualWave::linearPath(unsigned long sp, unsigned long range)
@@ -277,6 +280,29 @@ void VisualWave::levelsPath(unsigned long sp, unsigned long range)
         signalPath.lineTo(x, y); // horizontal (dur), una instrución menos, la pendiente está sobre el cambio, estos path no dibujan la cola
         y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
         signalPath.moveTo(x, y); // única diferencia con stepsPath
+    }
+
+    signalItem.setPath(signalPath);
+}
+
+void VisualWave::sticksPath(unsigned long sp, unsigned long range)
+{
+    RangeRingBuffer buffer = visualBuffer->buffer();
+    QPainterPath signalPath;
+
+    qreal yZero = linlin(0, 1, -1, 0, this->boundingRect().height());
+    qreal x = (sp + buffer.getAt(0).offset) * _graphicUnit;
+    qreal y = linlin(buffer.getAt(0).value, 1, -1, 0, this->boundingRect().height());
+    signalPath.moveTo(x, yZero);
+    signalPath.lineTo(x, y);
+
+    int loopSize = range / visualBuffer->visualBlock();
+
+    for(int i = 1; i < loopSize; i++) {
+        x = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit; // esto queda bien con el cambio en calcPeak y la idea calcPeakPeak?
+        y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
+        signalPath.moveTo(x, yZero);
+        signalPath.lineTo(x, y);
     }
 
     signalItem.setPath(signalPath);
