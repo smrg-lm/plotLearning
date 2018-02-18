@@ -32,7 +32,7 @@ VisualWave::VisualWave(QGraphicsItem *parent, const QPointF &pos)
     controlPointsItem.setBrush(Qt::gray);
     signalItem.setParentItem(this);
     signalItem.setPen(pen);
-    //signalItem.setBrush(Qt::black);
+    signalItem.setBrush(Qt::black);
 
     // TEST
     // inicializa visual buffer y setea los parámetros gráficos
@@ -204,9 +204,9 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
     visualBuffer->update(sp, range);
     // graphics
     //this->linearPath(sp, range);
-    this->stepsPath(sp, range);
+    //this->stepsPath(sp, range);
     //this->levelsPath(sp, range);
-    //this->barsPath(sp, range);
+    this->barsPath(sp, range);
 }
 
 void VisualWave::linearPath(unsigned long sp, unsigned long range)
@@ -282,48 +282,70 @@ void VisualWave::levelsPath(unsigned long sp, unsigned long range)
     signalItem.setPath(signalPath);
 }
 
+//void VisualWave::barsPath(unsigned long sp, unsigned long range)
+//{
+//    RangeRingBuffer buffer = visualBuffer->buffer();
+//    QPainterPath signalPath;
+//    int debugRectCount = 0;
+
+//    qreal x1 = (sp + buffer.getAt(0).offset) * _graphicUnit;
+//    qreal x2 = 0; // just because the compiler complains
+//    qreal y = linlin(buffer.getAt(0).value, 1, -1, 0, this->boundingRect().height());
+//    qreal yZero = linlin(0, 1, -1, 0, this->boundingRect().height());
+
+//    auto addRect = [&signalPath, &x1, &x2, &y, &yZero, &debugRectCount]() {
+//        if(y < yZero) {
+//            signalPath.addRect(x1, y, x2 - x1, -(y - yZero)); // up
+//            debugRectCount++;
+//        } else {
+//            signalPath.addRect(x1, y, x2 - x1, yZero - y); // down
+//            debugRectCount++;
+//        }
+//    };
+
+//    int loopSize = range / visualBuffer->visualBlock();
+
+//    for(int i = 1; i < loopSize; i++) {
+//        x2 = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit;
+//        addRect();
+//        x1 = x2;
+//        y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
+//    }
+//    addRect();
+
+//    qDebug() << "barsPath elementCount: " << signalPath.elementCount() << "rectCount: " << debugRectCount;
+//    signalItem.setPath(signalPath);
+//}
+
 void VisualWave::barsPath(unsigned long sp, unsigned long range)
 {
-    // es muy pesado computacionalmente así como está
-    // demasiado, por alguna razón, más de 200 rectángulos
-    // y consume demasiado cpu al hacer zoom, raro?
-    // el problema es signalItem.setBrush(Qt::black);
-
-    // de cerca se ve lindo, pero usar un paths tampoco
-    // serviría para ploteo espectral, toFillPolygons
-    // podría ayudar, aunque no sirve para graphicsPathItem,
-    // tal vez haya que hacerlo con graphicsRectItems?
+    // alternative path
+    // el problema sigue siendo signalItem.setBrush(Qt::black);
 
     RangeRingBuffer buffer = visualBuffer->buffer();
     QPainterPath signalPath;
-    int debugRectCount = 0;
 
-    qreal x1 = (sp + buffer.getAt(0).offset) * _graphicUnit;
-    qreal x2 = 0; // just because the compiler complains
+    qreal x = (sp + buffer.getAt(0).offset) * _graphicUnit;
     qreal y = linlin(buffer.getAt(0).value, 1, -1, 0, this->boundingRect().height());
-    qreal yZero = linlin(0, 1, -1, 0, this->boundingRect().height());
+    signalPath.moveTo(x, y);
 
-    auto addRect = [&signalPath, &x1, &x2, &y, &yZero, &debugRectCount]() {
-        if(y < yZero) {
-            signalPath.addRect(x1, y, x2 - x1, -(y - yZero)); // up
-            debugRectCount++;
-        } else {
-            signalPath.addRect(x1, y, x2 - x1, yZero - y); // down
-            debugRectCount++;
-        }
-    };
+    qreal x1 = x;
+    qreal y1 = y;
+    qreal yZero = linlin(0, 1, -1, 0, this->boundingRect().height());
 
     int loopSize = range / visualBuffer->visualBlock();
 
     for(int i = 1; i < loopSize; i++) {
-        x2 = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit;
-        addRect();
-        x1 = x2;
+        x = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit; // esto queda bien con el cambio en calcPeak y la idea calcPeakPeak?
+        signalPath.lineTo(x, y); // horizontal (dur), una instrución menos, la pendiente está sobre el cambio, estos path no dibujan la cola
         y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
+        signalPath.lineTo(x, y);
     }
-    addRect();
 
-    qDebug() << "barsPath elementCount: " << signalPath.elementCount() << "rectCount: " << debugRectCount;
+    signalPath.lineTo(x, yZero); // vuelve sobre sí mismo porque no dibuja la cola
+    signalPath.lineTo(x1, yZero);
+    signalPath.lineTo(x1, y1);
+
     signalItem.setPath(signalPath);
 }
 

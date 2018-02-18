@@ -97,6 +97,7 @@ private:
  * levels ok (test) (just the level line by sample, not bars
  * points (could be non editable edit points)
  * plines (points an lines)
+ * discrete sticks always from zero
  *
  * Múltiples señales en un mismo cajón se usa para
  * la visualización del tracking de armónicos
