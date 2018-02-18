@@ -205,6 +205,7 @@ void VisualWave::updateSignalPath(unsigned long sp, unsigned long ep)
     // graphics
     //this->linearPath(sp, range);
     this->stepsPath(sp, range);
+    //this->levelsPath(sp, range);
     //this->barsPath(sp, range);
 }
 
@@ -250,9 +251,32 @@ void VisualWave::stepsPath(unsigned long sp, unsigned long range)
 
     for(int i = 1; i < loopSize; i++) {
         x = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit; // esto queda bien con el cambio en calcPeak y la idea calcPeakPeak?
-        signalPath.lineTo(x, y); // horizontal (dur), uns instrución menos, la pendiente está sobre el cambio, estos path no dibujan la cola
+        signalPath.lineTo(x, y); // horizontal (dur), una instrución menos, la pendiente está sobre el cambio, estos path no dibujan la cola
         y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
         signalPath.lineTo(x, y);
+    }
+
+    signalItem.setPath(signalPath);
+}
+
+void VisualWave::levelsPath(unsigned long sp, unsigned long range)
+{
+    // que no dibuje la cola es un problema
+
+    RangeRingBuffer buffer = visualBuffer->buffer();
+    QPainterPath signalPath;
+
+    qreal x = (sp + buffer.getAt(0).offset) * _graphicUnit;
+    qreal y = linlin(buffer.getAt(0).value, 1, -1, 0, this->boundingRect().height());
+    signalPath.moveTo(x, y);
+
+    int loopSize = range / visualBuffer->visualBlock();
+
+    for(int i = 1; i < loopSize; i++) {
+        x = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit; // esto queda bien con el cambio en calcPeak y la idea calcPeakPeak?
+        signalPath.lineTo(x, y); // horizontal (dur), una instrución menos, la pendiente está sobre el cambio, estos path no dibujan la cola
+        y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
+        signalPath.moveTo(x, y); // única diferencia con stepsPath
     }
 
     signalItem.setPath(signalPath);

@@ -44,6 +44,7 @@ private:
     void updateSignalPath(unsigned long sp, unsigned long ep);
     void linearPath(unsigned long sp, unsigned long range);
     void stepsPath(unsigned long sp, unsigned long range);
+    void levelsPath(unsigned long sp, unsigned long range);
     void barsPath(unsigned long sp, unsigned long range);
     void updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange);
 
@@ -93,9 +94,9 @@ private:
  * linear (default) ok (test)
  * steps ok (test)
  * bars not ok (test)
+ * levels ok (test) (just the level line by sample, not bars
  * points (could be non editable edit points)
  * plines (points an lines)
- * levels (just the level line by sample, not bars
  *
  * Múltiples señales en un mismo cajón se usa para
  * la visualización del tracking de armónicos
