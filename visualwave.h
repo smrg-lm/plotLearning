@@ -3,6 +3,14 @@
 
 #include "visualgroup.h"
 
+// *** TEST para los path ineficientes
+class SignalPathItem : public QGraphicsPathItem
+{
+public:
+    using QGraphicsPathItem::QGraphicsPathItem;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+};
+
 class ControlPoint;
 class VisualBuffer;
 
@@ -52,7 +60,8 @@ private:
     int obtainPointNumber(const QPointF &point);
     void editPoint(const QPointF &point);
 
-    QGraphicsPathItem signalItem;
+    //QGraphicsPathItem signalItem;
+    SignalPathItem signalItem; // *** TEST para los path ineficientes
     //QGraphicsPathItem wavePeaksItem;
     QGraphicsPathItem controlPointsItem;
 

@@ -11,6 +11,41 @@
 
 #include <QDebug>
 
+// *** hay un bug cuando se hace zoom luego de mover: terminate called after throwing an instance of 'char const*'
+// *** scroll sigue siendo muy pesado, demasiado, no se puede cargar muestra a muestra
+
+void SignalPathItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    // *** TEST para los path ineficientes
+
+    Q_UNUSED(option);
+    Q_UNUSED(widget);
+
+    QPainterPath path = this->path();
+    QList<QPolygonF> list = path.toSubpathPolygons();
+    //qDebug() << "QPolygonF: " << list;
+
+    // *** para barsPath como rectángulos ***
+//    QPolygonF(
+//                QPointF(149.662,0.00135311),
+//                QPointF(149.738,0.00135311),
+//                QPointF(149.738,25),
+//                QPointF(149.662,25),
+//                QPointF(149.662,0.00135311)
+//                );
+
+    // *** para sticksPath como lines ***
+    //QPolygonF(QPointF(0.0615208,25)QPointF(0.0615208,49.0776))
+
+    QPen pen; pen.setWidth(0);
+    painter->setPen(pen);
+
+    for(const QPolygonF &p : list) {
+        //painter->fillRect(QRectF(p[0], p[2]), Qt::black);
+        painter->drawLine(p[0], p[1]);
+    }
+}
+
 // sc linlin
 qreal linlin(qreal value, qreal inMin, qreal inMax, qreal outMin, qreal outMax)
 {
@@ -55,15 +90,15 @@ void VisualWave::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     Q_UNUSED(widget);
 
     painter->setBrush(Qt::lightGray);
-    QPen p;
-    p.setWidth(0);
-    painter->setPen(p);
+    QPen pen;
+    pen.setWidth(0);
+    painter->setPen(pen);
     painter->drawRect(this->boundingRect());
 
     // no se puede llamar este update cada vez que actualiza
     // la vista por cualquier razón, no parece correcto, hay
     // que actualizar los path cuando sea necesario
-    p.setBrush(Qt::black); // tal vez pasar p a updatePathItems?
+    pen.setBrush(Qt::black); // tal vez pasar p a updatePathItems?
     this->updatePathItems(); // confirmar que actualiza correctamente
 }
 
@@ -308,75 +343,76 @@ void VisualWave::sticksPath(unsigned long sp, unsigned long range)
     signalItem.setPath(signalPath);
 }
 
-//void VisualWave::barsPath(unsigned long sp, unsigned long range)
-//{
-//    RangeRingBuffer buffer = visualBuffer->buffer();
-//    QPainterPath signalPath;
-//    int debugRectCount = 0;
-
-//    qreal x1 = (sp + buffer.getAt(0).offset) * _graphicUnit;
-//    qreal x2 = 0; // just because the compiler complains
-//    qreal y = linlin(buffer.getAt(0).value, 1, -1, 0, this->boundingRect().height());
-//    qreal yZero = linlin(0, 1, -1, 0, this->boundingRect().height());
-
-//    auto addRect = [&signalPath, &x1, &x2, &y, &yZero, &debugRectCount]() {
-//        if(y < yZero) {
-//            signalPath.addRect(x1, y, x2 - x1, -(y - yZero)); // up
-//            debugRectCount++;
-//        } else {
-//            signalPath.addRect(x1, y, x2 - x1, yZero - y); // down
-//            debugRectCount++;
-//        }
-//    };
-
-//    int loopSize = range / visualBuffer->visualBlock();
-
-//    for(int i = 1; i < loopSize; i++) {
-//        x2 = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit;
-//        addRect();
-//        x1 = x2;
-//        y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
-//    }
-//    addRect();
-
-//    qDebug() << "barsPath elementCount: " << signalPath.elementCount() << "rectCount: " << debugRectCount;
-//    signalItem.setPath(signalPath);
-//}
-
 void VisualWave::barsPath(unsigned long sp, unsigned long range)
 {
-    // alternative path
-    // el problema sigue siendo signalItem.setBrush(Qt::black);
-
     RangeRingBuffer buffer = visualBuffer->buffer();
     QPainterPath signalPath;
+    int debugRectCount = 0;
 
-    qreal x = (sp + buffer.getAt(0).offset) * _graphicUnit;
+    qreal x1 = (sp + buffer.getAt(0).offset) * _graphicUnit;
+    qreal x2 = 0; // just because the compiler complains
     qreal y = linlin(buffer.getAt(0).value, 1, -1, 0, this->boundingRect().height());
-    signalPath.moveTo(x, y);
-
-    qreal x1 = x;
-    qreal y1 = y;
     qreal yZero = linlin(0, 1, -1, 0, this->boundingRect().height());
+
+    auto addRect = [&signalPath, &x1, &x2, &y, &yZero, &debugRectCount]() {
+        if(y < yZero) {
+            signalPath.addRect(x1, y, x2 - x1, -(y - yZero)); // up
+            debugRectCount++;
+        } else {
+            signalPath.addRect(x1, y, x2 - x1, yZero - y); // down
+            debugRectCount++;
+        }
+    };
 
     int loopSize = range / visualBuffer->visualBlock();
 
     for(int i = 1; i < loopSize; i++) {
-        x = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit; // esto queda bien con el cambio en calcPeak y la idea calcPeakPeak?
-        signalPath.lineTo(x, y); // horizontal (dur), una instrución menos, la pendiente está sobre el cambio, estos path no dibujan la cola
+        x2 = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit;
+        addRect();
+        x1 = x2;
         y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
-        signalPath.lineTo(x, y);
     }
+    addRect();
 
-    signalPath.lineTo(x, yZero); // vuelve sobre sí mismo porque no dibuja la cola
-    signalPath.lineTo(x1, yZero);
-    signalPath.lineTo(x1, y1);
-
+    qDebug() << "barsPath elementCount: " << signalPath.elementCount() << "rectCount: " << debugRectCount;
     signalItem.setPath(signalPath);
 }
 
+//void VisualWave::barsPath(unsigned long sp, unsigned long range)
+//{
+//    // alternative path
+//    // el problema sigue siendo signalItem.setBrush(Qt::black);
+
+//    RangeRingBuffer buffer = visualBuffer->buffer();
+//    QPainterPath signalPath;
+
+//    qreal x = (sp + buffer.getAt(0).offset) * _graphicUnit;
+//    qreal y = linlin(buffer.getAt(0).value, 1, -1, 0, this->boundingRect().height());
+//    signalPath.moveTo(x, y);
+
+//    qreal x1 = x;
+//    qreal y1 = y;
+//    qreal yZero = linlin(0, 1, -1, 0, this->boundingRect().height());
+
+//    int loopSize = range / visualBuffer->visualBlock();
+
+//    for(int i = 1; i < loopSize; i++) {
+//        x = (sp + i * visualBuffer->visualBlock() + buffer.getAt(i).offset) * _graphicUnit; // esto queda bien con el cambio en calcPeak y la idea calcPeakPeak?
+//        signalPath.lineTo(x, y); // horizontal (dur), una instrución menos, la pendiente está sobre el cambio, estos path no dibujan la cola
+//        y = linlin(buffer.getAt(i).value, 1, -1, 0, this->boundingRect().height());
+//        signalPath.lineTo(x, y);
+//    }
+
+//    signalPath.lineTo(x, yZero); // vuelve sobre sí mismo porque no dibuja la cola
+//    signalPath.lineTo(x1, yZero);
+//    signalPath.lineTo(x1, y1);
+
+//    signalItem.setPath(signalPath);
+//}
+
 void VisualWave::updateControlPointsPath(unsigned long sp, unsigned long ep, qreal visualRange)
 {
+    // *** ACTUALIZA MAL AL HACER ZOOM Y SCROLL EN POSICIÓN INTERMEDIA
     if(!visualRange) return;
 
     QPainterPath controlsPath;
